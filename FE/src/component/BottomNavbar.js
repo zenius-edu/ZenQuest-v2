@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Edit, Heart, User } from 'lucide-react';
+import { Home, Edit, Trophy, User } from 'lucide-react';
 
 const BottomNavbar = ({ currentPage, onNavigate }) => {
   return (
@@ -31,8 +31,17 @@ const BottomNavbar = ({ currentPage, onNavigate }) => {
                 currentPage === 'learning-journey' ? 'text-white' : 'text-gray-400'
               }`} />
             </button>
-            <button className="p-3 hover:bg-gray-100 rounded-[20px] transition-all duration-200 active:scale-95">
-              <Heart className="w-6 h-6 text-gray-400" />
+            <button 
+              onClick={() => onNavigate && onNavigate('ranking')}
+              className={`p-3 rounded-[20px] transition-all duration-200 active:scale-95 ${
+                currentPage === 'ranking' 
+                  ? 'bg-gray-900' 
+                  : 'hover:bg-gray-100'
+              }`}
+            >
+              <Trophy className={`w-6 h-6 ${
+                currentPage === 'ranking' ? 'text-white' : 'text-gray-400'
+              }`} />
             </button>
             <button className="p-3 hover:bg-gray-100 rounded-[20px] transition-all duration-200 active:scale-95">
               <User className="w-6 h-6 text-gray-400" />

@@ -5,6 +5,7 @@ import CourseResult from './component/CourseResult';
 import QuizPage from './component/QuizPage';
 import ReadingMaterial from './component/ReadingMaterial';
 import ReadingPage from './component/ReadingPage';
+import RankingPage from './component/RankingPage';
 import BottomNavbar from './component/BottomNavbar';
 
 function App() {
@@ -22,6 +23,8 @@ function App() {
         return <ReadingMaterial onNavigate={setCurrentPage} selectedPlan={window.zenverseSelectedPlan} />;
       case 'reading-page':
         return <ReadingPage onNavigate={setCurrentPage} selectedPlan={window.zenverseSelectedPlan} selectedChapter={window.zenverseSelectedChapter} />;
+      case 'ranking':
+        return <RankingPage onNavigate={setCurrentPage} />;
       case 'dashboard':
       default:
         return <Dashboard onNavigate={setCurrentPage} />;
