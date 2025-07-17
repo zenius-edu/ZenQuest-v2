@@ -6,7 +6,41 @@ const LearningJourney = ({ onNavigate }) => {
 
   const handleSubmit = () => {
     console.log('Learning Quest Answer:', answer);
-    // Here you would typically send the data to your backend
+    
+    // Extract topic from the answer (simple approach - take first few words or main topic)
+    let topic = answer.trim();
+    
+    // Try to extract key learning topics from the answer
+    const topicKeywords = ['web development', 'data science', 'machine learning', 'programming', 'javascript', 'python', 'react', 'node.js', 'css', 'html', 'database', 'sql', 'ai', 'mobile development', 'android', 'ios', 'flutter', 'design', 'ui/ux', 'devops', 'cloud', 'aws', 'blockchain', 'cybersecurity'];
+    
+    // Find if any known topics are mentioned
+    const foundTopic = topicKeywords.find(keyword => 
+      answer.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    if (foundTopic) {
+      topic = foundTopic;
+    } else {
+      // If no specific topic found, use first 3 words or limit to 30 characters
+      const words = answer.trim().split(' ');
+      if (words.length > 3) {
+        topic = words.slice(0, 3).join(' ');
+      } else if (topic.length > 30) {
+        topic = topic.substring(0, 30) + '...';
+      }
+    }
+    
+    // Capitalize first letter
+    topic = topic.charAt(0).toUpperCase() + topic.slice(1);
+    
+    // Save the new quest using the global function
+    if (window.zenverseAddQuest && typeof window.zenverseAddQuest === 'function') {
+      window.zenverseAddQuest({ 
+        topic: topic,
+        originalAnswer: answer 
+      });
+    }
+    
     // Navigate to course result page
     if (onNavigate) {
       onNavigate('course-result');
