@@ -17,7 +17,109 @@ const CourseResult = ({ onNavigate }) => {
       bgColor: "from-blue-400 to-blue-500",
       icon: "💻",
       chapters: [
-        { id: 1, title: "HTML Fundamentals", readingTime: "15 min", content: "# HTML Fundamentals\n\nHTML (HyperText Markup Language) is the standard markup language for creating web pages..." },
+        { id: 1, title: "HTML Fundamentals", readingTime: "45 min", content: `
+# HTML Fundamentals: Building the Foundation of the Web
+
+HTML (HyperText Markup Language) stands as the cornerstone of web development, serving as the fundamental building block that powers every website you encounter in your daily digital journey. Created by Tim Berners-Lee in 1990 while working at CERN, HTML has evolved from a simple document markup language into a sophisticated platform for creating rich, interactive web experiences that billions of people rely on every single day.
+
+## The Revolutionary Vision of Tim Berners-Lee
+
+In the late 1980s, the world of computing was fragmented and isolated. Different computer systems spoke different languages, used different protocols, and stored information in incompatible formats. Scientists at CERN, the European research organization, were struggling with a problem that seemed insurmountable: how to share research findings and collaborate effectively across different computer networks and systems spread around the globe.
+
+Tim Berners-Lee, a British computer scientist working at CERN, had a revolutionary vision. He imagined a universal information space where documents could be linked together seamlessly, regardless of the computer system they resided on. This wasn't just about creating another file format or communication protocol—it was about fundamentally changing how human knowledge could be shared and accessed.
+
+His vision led to the creation of three interconnected technologies that would change the world forever. The HyperText Markup Language (HTML) would provide a way to structure and format documents. The HyperText Transfer Protocol (HTTP) would enable these documents to be transmitted across networks. And the Uniform Resource Locator (URL) would provide a universal addressing system to locate any document anywhere in the world.
+
+The first web page went live on August 6, 1991, and it was remarkably simple by today's standards. It contained just text, basic formatting, and a few links. Yet this humble beginning would spark a revolution that would transform commerce, education, entertainment, and virtually every aspect of human society.
+
+## Understanding HTML's Core Philosophy
+
+HTML is fundamentally different from programming languages like JavaScript, Python, or Java. While programming languages give computers step-by-step instructions to perform calculations and manipulate data, HTML is a markup language that describes the structure and meaning of content. When you write HTML, you're not programming in the traditional sense—you're annotating text with semantic information that both humans and machines can understand.
+
+Think of HTML as a way to have a conversation with both browsers and users about what your content means. Every element you choose tells a story about the importance, relationships, and purpose of different pieces of information on your page. This semantic approach is what makes HTML so powerful and enduring.
+
+The beauty of HTML lies in its simplicity and universality. A properly written HTML document can be rendered by any web browser, read by screen readers for accessibility, indexed by search engines, and processed by countless other tools and services. This universality was by design—Berners-Lee wanted to create a system that would work for everyone, regardless of their technology, location, or abilities.
+
+## The Evolution Through Decades
+
+### HTML 1.0: The Humble Beginning (1991)
+
+The original HTML specification was remarkably simple, containing just 18 elements. These included basic structural elements like headings (\`<h1>\` through \`<h6>\`), paragraphs (\`<p>\`), and the revolutionary anchor element (\`<a>\`) that made hyperlinks possible. There were also elements for lists, basic text formatting, and a few other essential features.
+
+Despite its simplicity, this first version established principles that remain important today. Elements had semantic meaning—a heading was marked as a heading, not just text that looked bigger. Links could connect to any document anywhere on the emerging World Wide Web. The foundation was laid for a truly universal information sharing system.
+
+### HTML 2.0: Standardization and Forms (1995)
+
+As the web began to grow rapidly in the early 1990s, it became clear that HTML needed to be standardized and expanded. HTML 2.0 was the first version to be published as an official standard by the Internet Engineering Task Force (IETF). This version introduced several crucial features that transformed the web from a read-only medium into an interactive platform.
+
+Forms were perhaps the most significant addition, enabling websites to collect user input for the first time. Suddenly, the web could support everything from simple feedback forms to complex applications. Image embedding was also formalized, allowing websites to include graphics alongside text. These additions marked the beginning of the web's transformation from an academic tool into a platform for commerce and entertainment.
+
+### HTML 3.2: Tables and Layout (1997)
+
+HTML 3.2 introduced tables, which revolutionized how content could be presented on web pages. While tables were intended for displaying tabular data, developers quickly discovered they could be used to create complex page layouts. This led to an era of table-based design that dominated the web for many years.
+
+This version also added support for applets, allowing Java programs to be embedded in web pages. Text flow around images was improved, and various new formatting options were introduced. However, the focus on presentation features would later be recognized as problematic, leading to a philosophy shift in subsequent versions.
+
+### HTML 4.0 and 4.01: Separation of Concerns (1997-1999)
+
+HTML 4.0 represented a major philosophical shift in web development. For the first time, the specification explicitly encouraged the separation of content (HTML) from presentation (CSS). This version introduced improved support for stylesheets, better internationalization features, and enhanced accessibility support.
+
+Scripting support was formalized, laying the groundwork for the dynamic, interactive websites we know today. The concept of frames was introduced, allowing multiple HTML documents to be displayed in a single browser window. While frames were later deprecated due to accessibility and usability issues, they demonstrated the web's evolution toward more application-like experiences.
+
+### HTML5: The Modern Foundation (2014)
+
+HTML5 represents the current state of the art in web markup. Development began in 2004, but the specification wasn't finalized until 2014. This long development cycle allowed for extensive testing and refinement, resulting in a standard that balances innovation with stability.
+
+HTML5 introduced numerous semantic elements that make HTML more meaningful and accessible. Elements like \`<header>\`, \`<nav>\`, \`<main>\`, \`<section>\`, \`<article>\`, \`<aside>\`, and \`<footer>\` provide clear structure that both humans and machines can understand. These elements represent a return to HTML's semantic roots while providing the tools needed for modern web development.
+
+## Semantic HTML: The Art of Meaningful Markup
+
+Modern HTML development emphasizes semantic markup—choosing elements based on their meaning rather than their appearance. This approach has profound implications for accessibility, search engine optimization, code maintainability, and future compatibility.
+
+### The Power of Semantic Elements
+
+HTML5 introduced numerous semantic elements that provide clear meaning and structure to web documents. The \`<header>\` element represents introductory content or navigational aids. The \`<nav>\` element contains navigation links. The \`<main>\` element represents the dominant content of the document. The \`<section>\` element represents a distinct section of content, while \`<article>\` represents a self-contained piece of content that could stand alone.
+
+These semantic elements replace the generic \`<div>\` elements that were overused in earlier web development. While \`<div>\` elements are still useful for styling and layout purposes, semantic elements provide meaning that both humans and machines can understand and act upon.
+
+### Document Structure and Accessibility
+
+Proper HTML structure is crucial for creating accessible web experiences. Screen readers and other assistive technologies rely on semantic markup to understand content relationships and provide navigation shortcuts to users. A well-structured HTML document enables users with disabilities to navigate efficiently and understand content context.
+
+The importance of accessibility extends beyond users with permanent disabilities. Temporary impairments, situational limitations, and aging-related changes affect everyone at some point. Good semantic HTML creates a foundation that benefits all users while ensuring compliance with accessibility standards and regulations.
+
+## Forms and User Interaction
+
+HTML forms represent one of the most important aspects of web development, enabling the collection and submission of user data. Modern HTML5 forms provide extensive capabilities for input validation, user experience enhancement, and accessibility support.
+
+Form structure should be logical and intuitive, with related fields grouped using \`<fieldset>\` elements and described with \`<legend>\` elements. Every form control should have an associated label that clearly describes its purpose. This labeling is essential for screen readers and improves usability for all users.
+
+HTML5 introduced numerous specialized input types that provide better user experiences and built-in validation. Email inputs validate email addresses, URL inputs validate web addresses, and date inputs provide native date pickers on supporting devices. These modern input types reduce the need for custom JavaScript solutions and provide more consistent user experiences.
+
+## Performance and Best Practices
+
+Modern web development requires careful attention to performance optimization. HTML plays a crucial role in site speed through efficient markup, proper resource loading, and strategic use of modern browser features.
+
+Clean, semantic HTML naturally performs better than complex, nested markup. Browsers can parse and render semantic elements more efficiently, and smaller file sizes reduce download times. Image optimization is crucial for performance, with modern HTML providing tools like responsive images and lazy loading to improve page load times.
+
+The separation of content, presentation, and behavior remains a fundamental principle of good web development. HTML should focus on content structure and meaning, CSS should handle visual presentation, and JavaScript should manage interactive behavior. This separation improves maintainability, performance, and accessibility.
+
+## The Future of HTML
+
+HTML continues to evolve with new features and capabilities being developed through collaborative standards processes. Future developments focus on improving developer experience, enhancing accessibility, and enabling new types of web applications.
+
+Web Components represent a significant evolution in HTML development, allowing developers to create reusable, encapsulated custom elements. Progressive Web Apps use HTML foundations to create app-like experiences that can work offline and be installed on user devices.
+
+The web platform continues to mature as a serious application development target, with HTML serving as the foundational layer that enables rich, accessible, and performant user experiences across an ever-expanding range of devices and contexts.
+
+## Conclusion: Mastering the Foundation
+
+HTML may appear simple on the surface, but its depth and nuance reward careful study and thoughtful application. The principles of semantic markup, accessibility-first design, and performance optimization provide a solid foundation for all web development work.
+
+As you continue your web development journey, remember that HTML is more than just markup—it's a tool for creating meaningful, accessible experiences that can be used by anyone, anywhere, on any device. The decisions you make when writing HTML have real impacts on real people, from the accessibility of your content to the performance of your sites.
+
+The web is a platform for everyone, and understanding HTML fundamentals ensures that your contributions help maintain and improve this universal accessibility. Master these foundations, and you'll be prepared for whatever the future of web development brings.
+        ` },
         { id: 2, title: "CSS Styling", readingTime: "20 min", content: "# CSS Styling\n\nCSS (Cascading Style Sheets) is used to style and layout web pages..." },
         { id: 3, title: "JavaScript Basics", readingTime: "25 min", content: "# JavaScript Basics\n\nJavaScript is a programming language that enables interactive web pages..." },
         { id: 4, title: "DOM Manipulation", readingTime: "18 min", content: "# DOM Manipulation\n\nThe Document Object Model (DOM) is a programming interface for HTML documents..." },
