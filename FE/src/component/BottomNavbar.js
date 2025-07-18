@@ -43,8 +43,17 @@ const BottomNavbar = ({ currentPage, onNavigate }) => {
                 currentPage === 'ranking' ? 'text-white' : 'text-gray-400'
               }`} />
             </button>
-            <button className="p-3 hover:bg-gray-100 rounded-[20px] transition-all duration-200 active:scale-95">
-              <User className="w-6 h-6 text-gray-400" />
+            <button 
+              onClick={() => onNavigate && onNavigate('profile')}
+              className={`p-3 rounded-[20px] transition-all duration-200 active:scale-95 ${
+                currentPage === 'profile' 
+                  ? 'bg-gray-900' 
+                  : 'hover:bg-gray-100'
+              }`}
+            >
+              <User className={`w-6 h-6 ${
+                currentPage === 'profile' ? 'text-white' : 'text-gray-400'
+              }`} />
             </button>
           </div>
         </div>
