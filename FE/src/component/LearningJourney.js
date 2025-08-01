@@ -17,6 +17,32 @@ const LearningJourney = ({ onNavigate }) => {
   const timerRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  // Timer effect for recording duration
+  useEffect(() => {
+    if (isRecording) {
+      console.log('Starting timer, isRecording:', isRecording);
+      timerRef.current = setInterval(() => {
+        setRecordingDuration(prev => {
+          console.log('Timer tick, duration:', prev + 1);
+          return prev + 1;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        console.log('Stopping timer');
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isRecording]);
+
   // Initialize speech recognition with multi-language support
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -80,6 +106,7 @@ const LearningJourney = ({ onNavigate }) => {
         setShowPreview(false);
         setAudioBlob(null);
         setRecordingDuration(0);
+        
         audioChunksRef.current = [];
         
         // Try to create MediaRecorder with different formats
@@ -139,11 +166,6 @@ const LearningJourney = ({ onNavigate }) => {
         // Start speech recognition
         recognition.start();
         
-        // Start timer
-        timerRef.current = setInterval(() => {
-          setRecordingDuration(prev => prev + 1);
-        }, 1000);
-        
       } catch (error) {
         console.error('Error starting recording:', error);
         setIsRecording(false);
@@ -152,13 +174,10 @@ const LearningJourney = ({ onNavigate }) => {
         if (recognition) {
           try {
             setRecordedText('');
-            setRecordingDuration(0);
-            recognition.start();
             setIsRecording(true);
+            setRecordingDuration(0);
             
-            timerRef.current = setInterval(() => {
-              setRecordingDuration(prev => prev + 1);
-            }, 1000);
+            recognition.start();
           } catch (speechError) {
             console.error('Speech recognition fallback failed:', speechError);
           }
@@ -311,26 +330,29 @@ const LearningJourney = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{background: '#372974'}}>
       {/* Mobile optimized container */}
-      <div className="px-4 py-6 pb-24">
-        <div className="max-w-full mx-auto bg-white rounded-[24px] overflow-hidden min-h-[calc(100vh-8rem)]">
+      <div className="px-4 py-6 pb-12">
+        <div className="max-w-full mx-auto min-h-[calc(100vh-8rem)] flex flex-col">
           
           {/* Header - Mobile optimized */}
-          <div className="p-4 pb-2">
+          <div className="p-4 pb-1">
             <div className="text-center mb-4">
-              <h1 className="text-lg font-bold text-gray-900">Create Your Learning Quest</h1>
             </div>
           </div>
 
-          {/* Question Content - Mobile optimized */}
-          <div className="px-4 flex-1 flex flex-col justify-center">
+          {/* Question Content - Mobile optimized - Centered */}
+          <div className="px-4 flex-1 flex flex-col justify-center items-center">
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-                <Target className="w-8 h-8 text-orange-500" />
+              <div className="inline-flex items-center justify-center w-44 h-44 bg-orange-100 rounded-full mb-4">
+                <img 
+                  src="/images/zenquest mascot.png" 
+                  alt="ZenQuest Mascot" 
+                  className="w-40 h-40 object-contain"
+                />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">What do you want to learn?</h2>
-              <p className="text-gray-600 text-sm px-2">Tell us about your learning goals and we'll create the perfect quest for you</p>
+              <h2 className="text-xl font-bold text-white mb-2 leading-tight">What do you want to learn?</h2>
+              <p className="text-gray-200 text-sm px-2">Tell us about your learning goals and we'll create the perfect quest for you</p>
             </div>
 
             {/* Voice Recording Preview Modal */}
@@ -396,14 +418,14 @@ const LearningJourney = ({ onNavigate }) => {
               </div>
             )}
 
-            {/* Answer Input with Voice Option */}
-            <div className="mb-6">
-              <div className="relative">
+            {/* Answer Input with Voice Option - Widget Style */}
+            <div className="mb-6 w-full max-w-lg">
+              <div className="relative bg-white border-2 border-gray-200 rounded-2xl p-1 shadow-md">
                 <textarea
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="e.g., I want to master web development, learn data science, improve my programming skills... atau dalam bahasa Indonesia: Saya ingin belajar pemrograman web, data science, dll."
-                  className="w-full h-32 p-4 pr-14 bg-gray-50 rounded-[16px] border-0 resize-none focus:outline-none focus:ring-2 focus:ring-orange-200 text-gray-700 placeholder-gray-500 text-sm leading-relaxed"
+                  placeholder="e.g., I want to master web development, learn data science, improve my programming skills..."
+                  className="w-full h-32 p-4 pr-14 bg-transparent rounded-xl border-0 resize-none focus:outline-none text-gray-700 placeholder-gray-500 text-sm leading-relaxed"
                   rows={4}
                 />
                 
@@ -411,7 +433,7 @@ const LearningJourney = ({ onNavigate }) => {
                 {isSupported && (
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
-                    className={`absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    className={`absolute bottom-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                       isRecording
                         ? 'bg-red-500 text-white animate-pulse'
                         : 'bg-orange-500 hover:bg-orange-600 text-white'
@@ -429,8 +451,8 @@ const LearningJourney = ({ onNavigate }) => {
               {/* Voice Input Status */}
               {isRecording && (
                 <div className="flex items-center justify-center mt-3 space-x-2">
-                  <Volume2 className="w-4 h-4 text-red-500 animate-pulse" />
-                  <span className="text-sm text-red-500 font-medium">
+                  <Volume2 className="w-4 h-4 text-white animate-pulse" />
+                  <span className="text-sm text-white font-medium">
                     Listening... {formatDuration(recordingDuration)}
                   </span>
                 </div>
@@ -439,26 +461,25 @@ const LearningJourney = ({ onNavigate }) => {
               {/* Voice Input Instructions */}
               {isSupported && !isRecording && (
                 <div className="text-center mt-3">
-                  <p className="text-xs text-gray-500">🎤 Bicara dalam Bahasa Indonesia atau English</p>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Navigation - Mobile optimized */}
-          <div className="p-4 pt-0">
-            <button
-              onClick={handleSubmit}
-              disabled={!answer.trim()}
-              className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-full font-semibold transition-colors text-sm ${
-                answer.trim()
-                  ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              <span>Create My Quest</span>
-              <Target className="w-4 h-4" />
-            </button>
+            {/* Navigation - Mobile optimized */}
+            <div className="w-full max-w-lg">
+              <button
+                onClick={handleSubmit}
+                disabled={!answer.trim()}
+                className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-full font-semibold transition-colors text-sm ${
+                  answer.trim()
+                    ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <span>Create My Quest</span>
+                <Target className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
