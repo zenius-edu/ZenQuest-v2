@@ -5,26 +5,17 @@ const Dashboard = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-white relative">
       {/* Beautiful ZenQuest Header */}
-      <div className="relative bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 px-6 pt-8 pb-8">
+      <div className="relative py-2" style={{background: '#372974'}}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-2xl">✨</span>
+          <div className="flex items-center space-x-3 px-6">
+            <div className="flex items-center">
+              <img 
+                src="/images/zenquest 2.png" 
+                alt="ZenQuest Logo" 
+                className="w-auto object-contain"
+                style={{height: '88px'}}
+              />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">
-                <span className="text-orange-400">Zen</span>Quest
-              </h1>
-              <p className="text-gray-300 text-sm mt-1">Learn • Grow • Achieve</p>
-            </div>
-          </div>
-          
-          {/* Notification & Time */}
-          <div className="text-right">
-            <div className="w-10 h-10 bg-white bg-opacity-10 backdrop-blur-sm rounded-full flex items-center justify-center mb-2">
-              <span className="text-orange-400 text-lg">🔔</span>
-            </div>
-            <p className="text-gray-300 text-xs">Good Evening</p>
           </div>
         </div>
         
@@ -62,7 +53,7 @@ const Dashboard = ({ onNavigate }) => {
           <div className="mb-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Progress to your future</h3>
             
-            <div className="bg-gradient-to-r from-orange-400 to-orange-500 rounded-[24px] p-5 text-white relative overflow-hidden">
+            <div className="rounded-[24px] p-5 text-white relative overflow-hidden" style={{background: 'linear-gradient(135deg, #ee7e5c 0%, #372974 60%, #372974 100%)'}}>
               <div className="relative z-10 pr-20">
                 <h4 className="text-xl font-bold mb-1 leading-tight">Your</h4>
                 <h4 className="text-xl font-bold mb-3 leading-tight">Learning Journey</h4>
