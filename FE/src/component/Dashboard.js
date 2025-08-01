@@ -78,39 +78,40 @@ const Dashboard = ({ onNavigate }) => {
                 </button>
               </div>
               
-              {/* Progress Circle */}
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <div className="relative w-16 h-16">
-                  {/* Background circle */}
-                  <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="rgba(255,255,255,0.2)"
-                      strokeWidth="6"
-                      fill="none"
-                    />
-                    {/* Progress circle with rounded caps */}
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="white"
-                      strokeWidth="6"
-                      fill="none"
-                      strokeDasharray={`${67 * 2.51} ${(100-67) * 2.51}`}
-                      strokeLinecap="round"
-                      strokeDashoffset="0"
-                    />
-                  </svg>
-                  {/* Center text */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-sm font-bold leading-none">67%</div>
-                      <div className="text-xs text-orange-100 mt-1">Done</div>
+              {/* Beautiful Progress Circle */}
+              <div className="absolute right-5 top-1/2 transform -translate-y-1/2">
+                <div className="relative">
+                  {/* Progress background */}
+                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-10 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-white leading-none">67%</div>
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Progress arc */}
+                  <svg className="absolute inset-0 w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="rgba(255,255,255,0.3)"
+                      strokeWidth="3"
+                      fill="none"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="white"
+                      strokeWidth="3"
+                      fill="none"
+                      strokeDasharray="175.9"
+                      strokeDashoffset="58"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
