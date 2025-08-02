@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, User, BookOpen, Target, Clock, Star, Mic, MicOff, Volume2, Play, Check, X, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, BookOpen, Target, Clock, Star, Mic, MicOff, Volume2, Play, Check, X, RotateCcw, Plus } from 'lucide-react';
 
 const LearningJourney = ({ onNavigate }) => {
   const [answer, setAnswer] = useState('');
@@ -477,7 +477,7 @@ const LearningJourney = ({ onNavigate }) => {
                 }`}
               >
                 <span>Create My Quest</span>
-                <Target className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>
