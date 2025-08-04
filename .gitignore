@@ -1,0 +1,8 @@
+# Clojure related
+.clj-kondo
+.lsp
+.calva
+profiles.clj
+
+# Node related
+node_modules
