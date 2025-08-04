@@ -1043,15 +1043,13 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
                       {/* Pin Button */}
                       <button
                         onClick={() => togglePin(plan.id)}
-                        className={`p-2 rounded-lg transition-all duration-200 ${
-                          pinnedPlans.has(plan.id)
-                            ? 'bg-orange-100 text-orange-600 hover:bg-orange-200 shadow-sm'
-                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
-                        }`}
+                        className="p-2 hover:opacity-70 transition-opacity duration-200"
                         title={pinnedPlans.has(plan.id) ? 'Unpin quest' : 'Pin quest'}
                       >
-                        <Pin className={`w-4 h-4 transition-transform duration-200 ${
-                          pinnedPlans.has(plan.id) ? 'fill-current rotate-12' : ''
+                        <Pin className={`w-5 h-5 transition-transform duration-200 ${
+                          pinnedPlans.has(plan.id) 
+                            ? 'fill-current rotate-12 text-orange-500' 
+                            : 'text-gray-400'
                         }`} />
                       </button>
                     </div>
@@ -1082,7 +1080,7 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
                     <div className="mb-4">
                       <button
                         onClick={() => setExpandedSkills(expandedSkills === plan.id ? null : plan.id)}
-                        className="w-full bg-gray-50 hover:bg-gray-100 rounded-xl p-3 transition-colors flex items-center justify-between"
+                        className="w-full bg-gray-50 hover:bg-gray-100 rounded-xl py-1 px-3 transition-colors flex items-center justify-between"
                       >
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 rounded-full bg-orange-500"></div>

@@ -310,16 +310,6 @@ const LearningJourney = ({ onNavigate }) => {
       {/* Header with Profile */}
       <div className="px-4 py-6 pb-12">
         <div className="max-w-full mx-auto min-h-[calc(100vh-8rem)] flex flex-col">
-          
-          {/* Back Button */}
-          <div className="p-4 pb-1">
-            <button
-              onClick={() => onNavigate && onNavigate('dashboard')}
-              className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white hover:bg-opacity-30 transition-all"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-          </div>
 
           {/* Learning Journey Content - Centered */}
           <div className="px-4 flex-1 flex flex-col justify-center items-center">
