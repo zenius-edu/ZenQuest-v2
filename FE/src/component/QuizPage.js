@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckCircle, XCircle, Trophy, RefreshCw } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Trophy, RefreshCw, ArrowLeft, Play } from 'lucide-react';
 
 const QuizPage = ({ onNavigate }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -223,68 +223,74 @@ const QuizPage = ({ onNavigate }) => {
   if (quizFinished) {
     if (showExplanation) {
       return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-gray-50">
           <div className="pb-24">
-            <div className="bg-white overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-orange-400 to-orange-500 px-6 py-6">
-                <div className="flex items-center justify-between">
-                  <h1 className="text-lg font-bold text-white">Quiz Explanations</h1>
-                  <button
-                    onClick={() => setShowExplanation(false)}
-                    className="text-white hover:text-orange-100"
-                  >
-                    ✕
-                  </button>
-                </div>
+            {/* Simple Header */}
+            <div className="px-6 py-4" style={{background: '#372974'}}>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setShowExplanation(false)}
+                  className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white hover:bg-opacity-30 transition-all"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h1 className="text-lg font-medium text-white">Quiz Explanations</h1>
+                <div className="w-8"></div>
               </div>
+            </div>
 
-              {/* Questions with Explanations */}
-              <div className="p-6 space-y-8">
+            {/* Questions with Explanations */}
+            <div className="px-6 py-6">
+              <div className="space-y-6">
                 {questions.map((question, questionIndex) => (
-                  <div key={question.id} className="border-b border-gray-100 pb-8 last:border-b-0">
-                    <div className="mb-4">
-                      <div className="flex items-center space-x-2 mb-3">
-                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-sm font-medium">
-                          Question {questionIndex + 1}
-                        </span>
+                  <div key={question.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div className="flex items-start space-x-3 mb-4">
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{backgroundColor: '#372974'}}>
+                        {questionIndex + 1}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-2">{question.question}</h3>
                         {selectedAnswers[questionIndex] === question.correct ? (
-                          <span className="text-green-600 text-sm">✓ Correct</span>
+                          <div className="inline-flex items-center space-x-1 bg-green-100 text-green-600 px-2 py-1 rounded-lg text-xs font-medium">
+                            <CheckCircle className="w-3 h-3" />
+                            <span>Correct</span>
+                          </div>
                         ) : (
-                          <span className="text-red-600 text-sm">✗ Incorrect</span>
+                          <div className="inline-flex items-center space-x-1 bg-red-100 text-red-600 px-2 py-1 rounded-lg text-xs font-medium">
+                            <XCircle className="w-3 h-3" />
+                            <span>Incorrect</span>
+                          </div>
                         )}
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">{question.question}</h3>
                     </div>
 
                     <div className="space-y-2 mb-4">
                       {question.options.map((option, optionIndex) => (
                         <div
                           key={optionIndex}
-                          className={`p-3 rounded-lg border-2 ${
+                          className={`p-3 rounded-lg border text-sm ${
                             optionIndex === question.correct
-                              ? 'border-green-500 bg-green-50 text-green-900'
+                              ? 'border-green-200 bg-green-50 text-green-900'
                               : optionIndex === selectedAnswers[questionIndex]
-                              ? 'border-red-500 bg-red-50 text-red-900'
-                              : 'border-gray-200 bg-gray-50'
+                              ? 'border-red-200 bg-red-50 text-red-900'
+                              : 'border-gray-200 bg-gray-50 text-gray-600'
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
                             {optionIndex === question.correct ? (
-                              <CheckCircle className="w-5 h-5 text-green-500" />
+                              <CheckCircle className="w-4 h-4 text-green-500" />
                             ) : optionIndex === selectedAnswers[questionIndex] ? (
-                              <XCircle className="w-5 h-5 text-red-500" />
+                              <XCircle className="w-4 h-4 text-red-500" />
                             ) : (
-                              <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                              <div className="w-4 h-4 rounded-full border border-gray-300"></div>
                             )}
-                            <span className="text-sm">{option}</span>
+                            <span>{option}</span>
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
-                      <h4 className="font-semibold text-blue-900 mb-2">Explanation:</h4>
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
                       <p className="text-blue-800 text-sm leading-relaxed">{question.explanation}</p>
                     </div>
                   </div>
@@ -297,16 +303,16 @@ const QuizPage = ({ onNavigate }) => {
     }
 
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gray-50">
         <div className="flex items-center justify-center min-h-screen p-6">
-          <div className="bg-white rounded-[24px] p-8 w-full max-w-md text-center">
-            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Trophy className="w-10 h-10 text-orange-500" />
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-sm border border-gray-100">
+            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Trophy className="w-8 h-8 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Quiz Complete!</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Quiz Complete!</h1>
             <p className="text-gray-600 mb-6">{getScoreMessage()}</p>
             
-            <div className="bg-gray-50 rounded-[20px] p-6 mb-6">
+            <div className="bg-gray-50 rounded-2xl p-6 mb-6">
               <div className={`text-4xl font-bold mb-2 ${getScoreColor()}`}>
                 {score}/{questions.length}
               </div>
@@ -317,22 +323,24 @@ const QuizPage = ({ onNavigate }) => {
 
             <div className="space-y-3">
               <button
-                onClick={() => onNavigate && onNavigate('course-result')}
-                className="w-full bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white py-3 rounded-full font-semibold transition-all duration-200 active:scale-95"
+                onClick={() => onNavigate && onNavigate('dashboard')}
+                className="w-full text-white py-3 rounded-xl font-medium transition-all duration-200 active:scale-95"
+                style={{background: '#372974'}}
               >
-                Continue
+                Continue Learning
               </button>
               <button
                 onClick={() => setShowExplanation(true)}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-full font-semibold transition-all duration-200 active:scale-95"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95"
               >
                 View Explanations
               </button>
               <button
-                onClick={() => onNavigate && onNavigate('course-result')}
-                className="w-full border border-gray-300 hover:bg-gray-50 text-gray-600 py-3 rounded-full font-semibold transition-all duration-200 active:scale-95"
+                onClick={restartQuiz}
+                className="w-full border-2 hover:bg-gray-50 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95"
+                style={{borderColor: '#372974', color: '#372974'}}
               >
-                Back to Courses
+                Retake Quiz
               </button>
             </div>
           </div>
@@ -345,44 +353,44 @@ const QuizPage = ({ onNavigate }) => {
   const currentQ = questions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <div className="pb-24">
-        <div className="bg-white overflow-hidden">
-          
-          {/* Quiz Header */}
-          <div className="bg-gradient-to-r from-orange-400 to-orange-500 px-6 py-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-white">
-                <span className="text-sm opacity-90">Question</span>
-                <div className="text-xl font-bold">{currentQuestion + 1}/{questions.length}</div>
+        {/* Simple Quiz Header */}
+        <div className="px-6 py-6" style={{background: '#372974'}}>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => onNavigate && onNavigate('dashboard')}
+              className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white hover:bg-opacity-30 transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            
+            <div className="text-center">
+              <div className="text-white text-sm font-medium">
+                Question {currentQuestion + 1} of {questions.length}
               </div>
             </div>
             
-            {/* Timer Progress Bar */}
-            <div className="relative bg-white bg-opacity-20 rounded-full h-8 overflow-hidden">
-              <div 
-                className="bg-white bg-opacity-30 h-full transition-all duration-1000 ease-out rounded-full"
-                style={{ width: `${(timeLeft / 120) * 100}%` }}
-              >
-                <div className="absolute inset-0 bg-white opacity-20 animate-pulse rounded-full"></div>
-              </div>
-              {timeLeft <= 30 && (
-                <div className="absolute inset-0 bg-red-300 opacity-30 animate-ping rounded-full"></div>
-              )}
-              
-              {/* Timer Text and Icon Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex items-center space-x-2 text-white font-semibold text-sm">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatTime(timeLeft)}</span>
-                </div>
-              </div>
+            {/* Simple Timer */}
+            <div className="flex items-center space-x-2 text-white text-sm font-medium">
+              <Clock className="w-4 h-4" />
+              <span>{formatTime(timeLeft)}</span>
             </div>
           </div>
+          
+          {/* Simple Progress Bar */}
+          <div className="mt-4 w-full bg-white bg-opacity-20 rounded-full h-2">
+            <div 
+              className="h-2 bg-white bg-opacity-60 rounded-full transition-all duration-1000"
+              style={{ width: `${(timeLeft / 120) * 100}%` }}
+            ></div>
+          </div>
+        </div>
 
-          {/* Question Content */}
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 leading-tight">
+        {/* Question Content */}
+        <div className="px-6 py-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 leading-relaxed">
               {currentQ.question}
             </h2>
 
@@ -393,7 +401,7 @@ const QuizPage = ({ onNavigate }) => {
                   key={index}
                   onClick={() => selectAnswer(index)}
                   disabled={showAnswer}
-                  className={`w-full text-left p-4 rounded-[16px] border-2 transition-all duration-200 ${getOptionStyle(index)} ${showAnswer ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${getOptionStyle(index)} ${showAnswer ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-sm'}`}
                 >
                   <div className="flex items-center space-x-3">
                     {getOptionIcon(index)}

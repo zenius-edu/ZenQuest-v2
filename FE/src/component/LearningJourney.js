@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, User, BookOpen, Target, Clock, Star, Mic, MicOff, Volume2, Play, Check, X, RotateCcw, Plus } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Volume2, Play, Check, RotateCcw, Plus } from 'lucide-react';
 
 const LearningJourney = ({ onNavigate }) => {
   const [answer, setAnswer] = useState('');
@@ -20,16 +20,11 @@ const LearningJourney = ({ onNavigate }) => {
   // Timer effect for recording duration
   useEffect(() => {
     if (isRecording) {
-      console.log('Starting timer, isRecording:', isRecording);
       timerRef.current = setInterval(() => {
-        setRecordingDuration(prev => {
-          console.log('Timer tick, duration:', prev + 1);
-          return prev + 1;
-        });
+        setRecordingDuration(prev => prev + 1);
       }, 1000);
     } else {
       if (timerRef.current) {
-        console.log('Stopping timer');
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
@@ -43,7 +38,7 @@ const LearningJourney = ({ onNavigate }) => {
     };
   }, [isRecording]);
 
-  // Initialize speech recognition with multi-language support
+  // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -51,7 +46,6 @@ const LearningJourney = ({ onNavigate }) => {
       
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
-      // Set to Indonesian as primary, but it can detect English too
       recognitionInstance.lang = 'id-ID';
       
       recognitionInstance.onresult = (event) => {
@@ -67,7 +61,6 @@ const LearningJourney = ({ onNavigate }) => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
-        // Show preview if we have recorded text
         if (recordedText.trim()) {
           setShowPreview(true);
         }
@@ -89,7 +82,6 @@ const LearningJourney = ({ onNavigate }) => {
   const startRecording = async () => {
     if (recognition && !isRecording) {
       try {
-        // Request microphone access
         const audioStream = await navigator.mediaDevices.getUserMedia({ 
           audio: {
             echoCancellation: true,
@@ -99,8 +91,6 @@ const LearningJourney = ({ onNavigate }) => {
         });
         
         setStream(audioStream);
-        
-        // Reset states
         setIsRecording(true);
         setRecordedText('');
         setShowPreview(false);
@@ -109,14 +99,13 @@ const LearningJourney = ({ onNavigate }) => {
         
         audioChunksRef.current = [];
         
-        // Try to create MediaRecorder with different formats
         let recorder;
         const options = [
           { mimeType: 'audio/webm;codecs=opus' },
           { mimeType: 'audio/webm' },
           { mimeType: 'audio/mp4' },
           { mimeType: 'audio/wav' },
-          {} // fallback with no specific format
+          {}
         ];
         
         for (const option of options) {
@@ -144,7 +133,6 @@ const LearningJourney = ({ onNavigate }) => {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
           setAudioBlob(audioBlob);
           
-          // Clean up stream
           if (stream) {
             stream.getTracks().forEach(track => track.stop());
           }
@@ -159,24 +147,18 @@ const LearningJourney = ({ onNavigate }) => {
         };
         
         setMediaRecorder(recorder);
-        
-        // Start recording
-        recorder.start(1000); // Record in 1-second chunks
-        
-        // Start speech recognition
+        recorder.start(1000);
         recognition.start();
         
       } catch (error) {
         console.error('Error starting recording:', error);
         setIsRecording(false);
         
-        // Fallback to speech recognition only
         if (recognition) {
           try {
             setRecordedText('');
             setIsRecording(true);
             setRecordingDuration(0);
-            
             recognition.start();
           } catch (speechError) {
             console.error('Speech recognition fallback failed:', speechError);
@@ -215,7 +197,6 @@ const LearningJourney = ({ onNavigate }) => {
         clearInterval(timerRef.current);
       }
       
-      // Show preview even if no audio was recorded
       setTimeout(() => {
         if (recordedText.trim()) {
           setShowPreview(true);
@@ -267,7 +248,6 @@ const LearningJourney = ({ onNavigate }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (stream) {
@@ -286,16 +266,14 @@ const LearningJourney = ({ onNavigate }) => {
   const handleSubmit = () => {
     console.log('Learning Quest Answer:', answer);
     
-    // Extract topic from the answer (simple approach - take first few words or main topic)
+    // Process the answer for potential future use
     let topic = answer.trim();
     
-    // Try to extract key learning topics from the answer (Indonesian and English)
     const topicKeywords = [
       'web development', 'data science', 'machine learning', 'programming', 'javascript', 'python', 'react', 'node.js', 'css', 'html', 'database', 'sql', 'ai', 'mobile development', 'android', 'ios', 'flutter', 'design', 'ui/ux', 'devops', 'cloud', 'aws', 'blockchain', 'cybersecurity',
       'pemrograman', 'pengembangan web', 'data sains', 'pembelajaran mesin', 'kecerdasan buatan', 'aplikasi mobile', 'desain', 'basis data'
     ];
     
-    // Find if any known topics are mentioned
     const foundTopic = topicKeywords.find(keyword => 
       answer.toLowerCase().includes(keyword.toLowerCase())
     );
@@ -303,7 +281,6 @@ const LearningJourney = ({ onNavigate }) => {
     if (foundTopic) {
       topic = foundTopic;
     } else {
-      // If no specific topic found, use first 3 words or limit to 30 characters
       const words = answer.trim().split(' ');
       if (words.length > 3) {
         topic = words.slice(0, 3).join(' ');
@@ -312,10 +289,9 @@ const LearningJourney = ({ onNavigate }) => {
       }
     }
     
-    // Capitalize first letter
     topic = topic.charAt(0).toUpperCase() + topic.slice(1);
     
-    // Save the new quest using the global function
+    // Store the quest data for potential future use
     if (window.zenverseAddQuest && typeof window.zenverseAddQuest === 'function') {
       window.zenverseAddQuest({ 
         topic: topic,
@@ -323,32 +299,36 @@ const LearningJourney = ({ onNavigate }) => {
       });
     }
     
-    // Navigate to course result page
+    // Just go back to dashboard
     if (onNavigate) {
-      onNavigate('course-result');
+      onNavigate('dashboard');
     }
   };
 
   return (
     <div className="min-h-screen" style={{background: '#372974'}}>
-      {/* Mobile optimized container */}
+      {/* Header with Profile */}
       <div className="px-4 py-6 pb-12">
         <div className="max-w-full mx-auto min-h-[calc(100vh-8rem)] flex flex-col">
           
-          {/* Header - Mobile optimized */}
+          {/* Back Button */}
           <div className="p-4 pb-1">
-            <div className="text-center mb-4">
-            </div>
+            <button
+              onClick={() => onNavigate && onNavigate('dashboard')}
+              className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white hover:bg-opacity-30 transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Question Content - Mobile optimized - Centered */}
+          {/* Learning Journey Content - Centered */}
           <div className="px-4 flex-1 flex flex-col justify-center items-center">
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-44 h-44 bg-orange-100 rounded-full mb-4">
+              <div className="mb-6">
                 <img 
                   src="/images/zenquest mascot.png" 
                   alt="ZenQuest Mascot" 
-                  className="w-40 h-40 object-contain"
+                  className="w-96 h-96 object-contain mx-auto"
                 />
               </div>
               <h2 className="text-xl font-bold text-white mb-2 leading-tight">What do you want to learn?</h2>
@@ -418,7 +398,7 @@ const LearningJourney = ({ onNavigate }) => {
               </div>
             )}
 
-            {/* Answer Input with Voice Option - Widget Style */}
+            {/* Answer Input with Voice Option */}
             <div className="mb-6 w-full max-w-lg">
               <div className="relative bg-white border-2 border-gray-200 rounded-2xl p-1 shadow-md">
                 <textarea
@@ -457,15 +437,9 @@ const LearningJourney = ({ onNavigate }) => {
                   </span>
                 </div>
               )}
-              
-              {/* Voice Input Instructions */}
-              {isSupported && !isRecording && (
-                <div className="text-center mt-3">
-                </div>
-              )}
             </div>
 
-            {/* Navigation - Mobile optimized */}
+            {/* Create Quest Button */}
             <div className="w-full max-w-lg">
               <button
                 onClick={handleSubmit}

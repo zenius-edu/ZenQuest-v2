@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, BookOpen, Target, Plus, ChevronRight, ChevronDown, Play, CheckCircle } from 'lucide-react';
+import { Clock, BookOpen, Target, Plus, ChevronRight, ChevronDown, Play, CheckCircle, Pin } from 'lucide-react';
 
 const CourseResult = ({ onNavigate }) => {
   const [expandedPlan, setExpandedPlan] = useState(null);
+  const [expandedSkills, setExpandedSkills] = useState(null);
   const [developmentPlans, setDevelopmentPlans] = useState([]);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [pinnedPlans, setPinnedPlans] = useState(new Set());
 
   // Default plans data
   const defaultPlans = [
@@ -12,7 +15,7 @@ const CourseResult = ({ onNavigate }) => {
       title: "Backend Developer with Clojure",
       description: "Master functional programming and build scalable backend systems",
       level: 3,
-      maxLevel: 10,
+      maxLevel: 100,
       totalSkills: 8,
       completedSkills: 5,
       progress: 62,
@@ -39,7 +42,7 @@ const CourseResult = ({ onNavigate }) => {
       title: "Professional Mathematician",
       description: "Advanced mathematical theory and practical applications",
       level: 2,
-      maxLevel: 10,
+      maxLevel: 100,
       totalSkills: 6,
       completedSkills: 2,
       progress: 33,
@@ -63,7 +66,7 @@ const CourseResult = ({ onNavigate }) => {
       title: "AI/ML Engineer",
       description: "Build intelligent systems with machine learning",
       level: 1,
-      maxLevel: 10,
+      maxLevel: 100,
       totalSkills: 7,
       completedSkills: 1,
       progress: 14,
@@ -88,6 +91,16 @@ const CourseResult = ({ onNavigate }) => {
   // Load plans from localStorage on component mount
   useEffect(() => {
     const savedPlans = localStorage.getItem('zenverse_development_plans');
+    const savedPinned = localStorage.getItem('zenverse_pinned_plans');
+    
+    if (savedPinned) {
+      try {
+        setPinnedPlans(new Set(JSON.parse(savedPinned)));
+      } catch (error) {
+        console.error('Error loading pinned plans:', error);
+      }
+    }
+    
     if (savedPlans) {
       try {
         const parsedPlans = JSON.parse(savedPlans);
@@ -134,6 +147,98 @@ const CourseResult = ({ onNavigate }) => {
     }
   };
 
+  // Save pinned plans to localStorage
+  const savePinnedToLocalStorage = (pinned) => {
+    try {
+      localStorage.setItem('zenverse_pinned_plans', JSON.stringify([...pinned]));
+    } catch (error) {
+      console.error('Error saving pinned plans to localStorage:', error);
+    }
+  };
+
+  // Toggle pin status
+  const togglePin = (planId) => {
+    const newPinned = new Set(pinnedPlans);
+    if (newPinned.has(planId)) {
+      newPinned.delete(planId);
+    } else {
+      newPinned.add(planId);
+    }
+    setPinnedPlans(newPinned);
+    savePinnedToLocalStorage(newPinned);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e, planId) => {
+    console.log('Drag started for plan:', planId); // Debug log
+    setDraggedItem(planId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', planId.toString());
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, targetPlanId) => {
+    e.preventDefault();
+    console.log('Drop on plan:', targetPlanId); // Debug log
+    
+    const draggedPlanId = parseInt(e.dataTransfer.getData('text/plain'));
+    console.log('Dragged plan ID:', draggedPlanId); // Debug log
+    
+    if (draggedPlanId && draggedPlanId !== targetPlanId) {
+      const draggedIndex = developmentPlans.findIndex(p => p.id === draggedPlanId);
+      const targetIndex = developmentPlans.findIndex(p => p.id === targetPlanId);
+      
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        const newPlans = [...developmentPlans];
+        const [draggedPlan] = newPlans.splice(draggedIndex, 1);
+        newPlans.splice(targetIndex, 0, draggedPlan);
+        
+        updatePlans(newPlans);
+        console.log('Plans reordered successfully'); // Debug log
+      }
+    }
+    
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    // Only remove if we're actually leaving the card
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+  };
+
+  const handleDragOverCard = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Only add drag-over if this isn't the dragged item
+    const targetPlanId = parseInt(e.currentTarget.getAttribute('data-plan-id'));
+    if (draggedItem !== targetPlanId) {
+      e.currentTarget.classList.add('drag-over');
+    }
+  };
+
+  // Sort plans: pinned first, then regular
+  const sortedPlans = developmentPlans.sort((a, b) => {
+    const aPinned = pinnedPlans.has(a.id);
+    const bPinned = pinnedPlans.has(b.id);
+    
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return 0;
+  });
+
   // Update plans and save to localStorage
   const updatePlans = (newPlans) => {
     setDevelopmentPlans(newPlans);
@@ -175,7 +280,7 @@ const CourseResult = ({ onNavigate }) => {
       title: `${questData.topic} Specialist`,
       description: `Master ${questData.topic} and build expertise`,
       level: 1,
-      maxLevel: 10,
+      maxLevel: 100,
       totalSkills: 6,
       completedSkills: 0,
       progress: 0,
@@ -245,23 +350,48 @@ const CourseResult = ({ onNavigate }) => {
     <div className="min-h-screen bg-gray-50">
       <div className="pb-24">
         
-        {/* Beautiful Header */}
-        <div className="relative px-6 py-12 pb-16" style={{background: 'linear-gradient(to right, #ee7e5c 0%, #372974 60%, #372974 100%)'}}>
-          <div className="flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                <img 
-                  src="/images/Icon for learning page .png" 
-                  alt="Learning Page Icon" 
-                  className="w-10 h-10 object-contain"
-                />
-              </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Your Learning Quest</h1>
-              <p className="text-white text-opacity-80 text-sm">Personalized development plans</p>
+        {/* Compact Modern Header */}
+        <div className="relative px-6 py-12 pb-16" style={{background: 'linear-gradient(135deg, #ee7e5c 0%, #372974 100%)'}}>
+          {/* Geometric Pattern Background */}
+          <div className="absolute inset-0 opacity-10">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+          
+          <div className="relative z-10 max-w-xl mx-auto text-center">
+            {/* Clean Icon Design */}
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6">
+              <img 
+                src="/images/Icon for learning page .png" 
+                alt="Learning Page Icon" 
+                className="w-12 h-12 object-contain"
+              />
+            </div>
+            
+            {/* Compact Typography */}
+            <div className="space-y-3">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">
+                Learning
+                <span className="block text-2xl md:text-3xl font-light text-white text-opacity-90">
+                  Quest
+                </span>
+              </h1>
+              
+              <div className="w-12 h-0.5 bg-white bg-opacity-60 mx-auto rounded-full"></div>
+              
+              <p className="text-lg text-white text-opacity-85 font-medium max-w-sm mx-auto leading-relaxed">
+                Your personalized path to mastery
+              </p>
             </div>
           </div>
           
-          {/* Curved Bottom */}
+          {/* Clean Curved Bottom */}
           <div className="absolute bottom-0 left-0 right-0 h-8 bg-gray-50" style={{
             borderRadius: '50% 50% 0 0 / 100% 100% 0 0'
           }}></div>
@@ -294,62 +424,84 @@ const CourseResult = ({ onNavigate }) => {
             <p className="text-gray-600 text-sm">Choose your path • {developmentPlans.length} plans available</p>
           </div>
           
-          {/* Beautiful Plan Cards */}
+          {/* Development Plan Cards with Drag & Drop */}
           <div className="space-y-4">
-            {developmentPlans.map((plan) => (
+            {sortedPlans.map((plan) => (
               <div 
                 key={plan.id} 
-                className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"
+                className={`bg-white rounded-2xl shadow-md overflow-hidden border transition-all duration-200 ${
+                  pinnedPlans.has(plan.id) 
+                    ? 'border-orange-200 ring-2 ring-orange-100' 
+                    : 'border-gray-100'
+                } ${
+                  draggedItem === plan.id ? 'opacity-50 scale-95' : 'hover:shadow-lg'
+                }`}
+                draggable="true"
+                onDragStart={(e) => handleDragStart(e, plan.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, plan.id)}
+                onDragEnd={handleDragEnd}
+                data-plan-id={plan.id}
+                style={{ cursor: 'grab' }}
               >
                 {/* Plan Header */}
                 <div className="p-5">
-                  <div className="flex items-center space-x-4 mb-4">
-                    {/* Circular Level Progress */}
-                    <div className="w-16 h-16 relative flex items-center justify-center flex-shrink-0">
-                      <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="28"
-                          stroke="#e5e7eb"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="28"
-                          stroke="#372974"
-                          strokeWidth="4"
-                          fill="none"
-                          strokeDasharray={`${(plan.level / plan.maxLevel) * 175.9} 175.9`}
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-sm font-bold" style={{color: '#372974'}}>L{plan.level}</span>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-4 flex-1">
+                      {/* Drag Handle */}
+                      <div className="flex flex-col space-y-1 cursor-grab active:cursor-grabbing">
+                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                      </div>
+                      
+                      {/* Circular Level Progress */}
+                      <div className="w-16 h-16 relative flex items-center justify-center flex-shrink-0">
+                        <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#e5e7eb"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#372974"
+                            strokeWidth="4"
+                            fill="none"
+                            strokeDasharray={`${(plan.level / plan.maxLevel) * 175.9} 175.9`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-sm font-bold" style={{color: '#372974'}}>L{plan.level}</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 text-lg mb-1">{plan.title}</h3>
+                        <p className="text-gray-600 text-sm mb-2">{plan.description}</p>
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-lg mb-1">{plan.title}</h3>
-                      <p className="text-gray-600 text-sm mb-2">{plan.description}</p>
-                      <div className="text-xs text-gray-500">Level {plan.level} of {plan.maxLevel}</div>
-                    </div>
-                  </div>
-                  
-                  {/* Skills Progress */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-gray-600">Skills Progress</span>
-                      <span className="text-sm font-semibold" style={{color: '#372974'}}>{plan.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-orange-500 h-2 rounded-full transition-all duration-300" 
-                        style={{ width: `${plan.progress}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{plan.completedSkills} of {plan.totalSkills} skills mastered</p>
+                    
+                    {/* Pin Button */}
+                    <button
+                      onClick={() => togglePin(plan.id)}
+                      className={`p-2 rounded-lg transition-all duration-200 ${
+                        pinnedPlans.has(plan.id)
+                          ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                      }`}
+                      title={pinnedPlans.has(plan.id) ? 'Unpin quest' : 'Pin quest'}
+                    >
+                      <Pin className={`w-4 h-4 ${pinnedPlans.has(plan.id) ? 'fill-current' : ''}`} />
+                    </button>
                   </div>
                   
                   {/* Action Buttons */}
@@ -374,65 +526,82 @@ const CourseResult = ({ onNavigate }) => {
                     </button>
                   </div>
 
-                  {/* Skills Information */}
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h4 className="font-semibold text-gray-900 text-sm mb-3">Skills in this Quest</h4>
-                    <div className="grid grid-cols-1 gap-2">
-                      {plan.skills.map((skill, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full" style={{backgroundColor: index < plan.completedSkills ? '#f97316' : '#d1d5db'}}></div>
-                          <span className={`text-xs ${index < plan.completedSkills ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                            {skill}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  {/* Skills Information Button */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => setExpandedSkills(expandedSkills === plan.id ? null : plan.id)}
+                      className="w-full bg-gray-50 hover:bg-gray-100 rounded-xl p-3 transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                        <span className="font-medium text-gray-900 text-sm">Skills in this Quest</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {expandedSkills === plan.id ? 'Hide' : 'Show'} {plan.skills.length} skills
+                      </div>
+                    </button>
                   </div>
 
-                  {/* Expanded Reading Materials */}
-                  {expandedPlan === plan.id && (
-                    <div className="border-t border-gray-100 bg-gray-50">
-                      <div className="p-5">
-                        <h4 className="font-semibold text-gray-900 mb-4">Reading Materials</h4>
-                        
-                        <div className="space-y-3">
-                          {plan.chapters && plan.chapters.length > 0 ? (
-                            plan.chapters.map((chapter, index) => (
-                              <div
-                                key={chapter.id}
-                                className="bg-white rounded-xl p-4 border border-gray-200 flex items-center justify-between"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 text-white rounded-lg flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#372974'}}>
-                                    {index + 1}
-                                  </div>
-                                  <div>
-                                    <h5 className="font-medium text-gray-900 text-sm">{chapter.title}</h5>
-                                    <div className="flex items-center space-x-1 mt-1">
-                                      <Clock className="w-3 h-3 text-gray-400" />
-                                      <span className="text-xs text-gray-500">{chapter.readingTime}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => handleReadChapter(plan, chapter)}
-                                  className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-xs font-medium transition-colors"
-                                >
-                                  Read
-                                </button>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-center py-8">
-                              <p className="text-gray-500 text-sm">No reading materials available</p>
-                            </div>
-                          )}
-                        </div>
+                  {/* Skills Information - Only show when expanded */}
+                  {expandedSkills === plan.id && (
+                    <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                      <div className="grid grid-cols-1 gap-2">
+                        {plan.skills.map((skill, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <div className="w-2 h-2 rounded-full" style={{backgroundColor: index < plan.completedSkills ? '#f97316' : '#d1d5db'}}></div>
+                            <span className={`text-xs ${index < plan.completedSkills ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                              {skill}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
-
                 </div>
+
+                {/* Expanded Reading Materials */}
+                {expandedPlan === plan.id && (
+                  <div className="border-t border-gray-100 bg-gray-50">
+                    <div className="p-5">
+                      <h4 className="font-semibold text-gray-900 mb-4">Reading Materials</h4>
+                      
+                      <div className="space-y-3">
+                        {plan.chapters && plan.chapters.length > 0 ? (
+                          plan.chapters.map((chapter, index) => (
+                            <div
+                              key={chapter.id}
+                              className="bg-white rounded-xl p-4 border border-gray-200 flex items-center justify-between"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 text-white rounded-lg flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#372974'}}>
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <h5 className="font-medium text-gray-900 text-sm">{chapter.title}</h5>
+                                  <div className="flex items-center space-x-1 mt-1">
+                                    <Clock className="w-3 h-3 text-gray-400" />
+                                    <span className="text-xs text-gray-500">{chapter.readingTime}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleReadChapter(plan, chapter)}
+                                className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-xs font-medium transition-colors"
+                              >
+                                Read
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <p className="text-gray-500 text-sm">No reading materials available</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
             ))}
           </div>

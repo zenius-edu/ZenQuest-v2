@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Edit, Trophy, User } from 'lucide-react';
+import { Home, Trophy, User } from 'lucide-react';
 
 const BottomNavbar = ({ currentPage, onNavigate }) => {
   return (
@@ -14,7 +14,7 @@ const BottomNavbar = ({ currentPage, onNavigate }) => {
           inset 0 1px 0 rgba(255, 255, 255, 0.4),
           inset 0 -1px 0 rgba(255, 255, 255, 0.1),
           0 0 0 1px rgba(0, 0, 0, 0.05)
-        `
+`
       }}>
         <div className="max-w-sm mx-auto">
           <div className="flex items-center justify-around">
@@ -38,27 +38,7 @@ const BottomNavbar = ({ currentPage, onNavigate }) => {
                 }}
               />
             </button>
-            <button 
-              onClick={() => onNavigate && onNavigate('learning-journey')}
-              className={`p-3 rounded-2xl transition-all duration-300 active:scale-95 ${
-                currentPage === 'learning-journey' 
-                  ? 'shadow-lg' 
-                  : 'hover:bg-white/20'
-              }`}
-              style={{
-                background: currentPage === 'learning-journey' 
-                  ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%)'
-                  : 'transparent'
-              }}
-            >
-              <Edit 
-                className="w-6 h-6 transition-all duration-300" 
-                style={{
-                  color: currentPage === 'learning-journey' ? '#6b7280' : '#9ca3af',
-                }}
-              />
-            </button>
-            <button 
+            <button
               onClick={() => onNavigate && onNavigate('ranking')}
               className={`p-3 rounded-2xl transition-all duration-300 active:scale-95 ${
                 currentPage === 'ranking' 
