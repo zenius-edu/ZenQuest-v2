@@ -314,7 +314,7 @@ The beauty of HTML lies in its simplicity and universality. A properly written H
       </div>
 
       {/* Bottom padding for safe area */}
-      <div className="pb-24"></div>
+      <div className="pb-32"></div>
     </div>
   );
 };

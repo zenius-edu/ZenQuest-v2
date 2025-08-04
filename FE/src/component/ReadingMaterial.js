@@ -280,7 +280,7 @@ function Counter() {
   if (!selectedChapter) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="pb-24">
+        <div className="pb-32">
           {/* Header */}
           <div className="relative bg-gradient-to-r from-orange-400 to-orange-500 px-6 py-8 pb-12">
             <div className="flex items-center mb-4">
@@ -369,7 +369,7 @@ function Counter() {
   // Reading View
   return (
     <div className="min-h-screen bg-white">
-      <div className="pb-24">
+      <div className="pb-32">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
           <div className="px-6 py-4">

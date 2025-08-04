@@ -35,7 +35,7 @@ const LoginPage = ({ onNavigate }) => {
       <div className="w-full max-w-sm">
         
         {/* Even Bigger Logo */}
-        <div className="text-center mb-2">
+        <div className="text-center mb-0">
           <img 
             src="/images/zenquest 2.png" 
             alt="ZenQuest Logo" 
@@ -44,7 +44,7 @@ const LoginPage = ({ onNavigate }) => {
         </div>
 
         {/* Compact Login Form */}
-        <div className="bg-white rounded-2xl p-5 shadow-xl border border-gray-100">
+        <div className="bg-white rounded-2xl p-5 shadow-xl border border-gray-100 -mt-12">
           <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">Sign in to continue</h2>
           
           {/* Google Login Button */}

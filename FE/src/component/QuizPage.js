@@ -354,7 +354,7 @@ const QuizPage = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="pb-24">
+      <div className="pb-32">
         {/* Simple Quiz Header */}
         <div className="px-6 py-6" style={{background: '#372974'}}>
           <div className="flex items-center justify-between">

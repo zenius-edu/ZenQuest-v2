@@ -348,7 +348,7 @@ const CourseResult = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="pb-24">
+      <div className="pb-32">
         
         {/* Compact Modern Header */}
         <div className="relative px-6 py-12 pb-16" style={{background: 'linear-gradient(135deg, #ee7e5c 0%, #372974 100%)'}}>

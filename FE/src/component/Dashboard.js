@@ -931,7 +931,7 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
 
       {/* Paper-like Content Area */}
       <div className="bg-white mx-4 -mt-4 rounded-3xl shadow-lg relative z-10 min-h-screen">
-        <div className="p-6 pb-24">      
+        <div className="p-6 pb-32">      
           <div className="max-w-sm mx-auto">
             
             {/* Header */}
@@ -945,11 +945,13 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-gray-500 text-sm">Hello!</p>
-                        <h2 className="text-xl font-bold text-gray-900">Fellycia Alvira</h2>
+                        <div className="flex items-center space-x-3">
+                          <h2 className="text-xl font-bold text-gray-900">Fellycia Alvira</h2>
+                          <span className="bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
+                            PRO
+                          </span>
+                        </div>
                       </div>
-                      <span className="bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
-                        Premium
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -966,17 +968,16 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
             <div className="mb-8">
               <button 
                 onClick={() => onNavigate && onNavigate('learning-journey')}
-                className="w-full bg-white border-2 border-gray-100 rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-300 text-left group"
+                className="w-full rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-300 text-left group"
+                style={{background: 'linear-gradient(135deg, #e76366 0%, #372974 100%)'}}
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-orange-50 transition-colors">
-                    <svg className="w-5 h-5 text-gray-600 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-0.5">Create New Quest</h3>
-                    <p className="text-gray-500 text-xs">Start a personalized learning journey</p>
+                    <h3 className="text-lg font-bold text-white mb-0.5">Create New Quest</h3>
+                    <p className="text-white text-opacity-80 text-xs">Start a personalized learning journey</p>
                   </div>
                 </div>
               </button>
