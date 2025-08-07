@@ -38,7 +38,7 @@ const RankingPage = ({ onNavigate }) => {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white">Leaderboard</h1>
           </div>
-        </div>
+          </div>
 
         {/* Podium Section */}
         <div className="px-6 py-4 pb-2" style={{backgroundColor: '#3d2c73'}}>
@@ -65,7 +65,7 @@ const RankingPage = ({ onNavigate }) => {
                 <span className="text-4xl font-bold text-white">2</span>
               </div>
             </div>
-
+            
             {/* 1st Place - Center (Highest) */}
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 rounded-full overflow-hidden mb-2 ring-4 ring-yellow-400">
@@ -120,7 +120,7 @@ const RankingPage = ({ onNavigate }) => {
         {/* Current User Card */}
         <div className="px-6 py-1 pb-2" style={{backgroundColor: '#3d2c73'}}>
           <div className="rounded-2xl p-4" style={{background: 'linear-gradient(135deg, #e76366 0%, #372974 100%)'}}>
-            <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-4">
               <div className="w-12 h-12 rounded-full overflow-hidden">
                 <img 
                   src={currentUser.avatar} 
@@ -133,9 +133,9 @@ const RankingPage = ({ onNavigate }) => {
                 />
                 <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold" style={{display: 'none'}}>
                   {currentUser.initials}
-                </div>
-              </div>
-              <div className="flex-1">
+                      </div>
+                    </div>
+                    <div className="flex-1">
                 <h3 className="font-semibold text-white text-lg">{currentUser.name}</h3>
                 <div className="flex items-center space-x-6 mt-1">
                   <div className="text-center">
@@ -152,9 +152,9 @@ const RankingPage = ({ onNavigate }) => {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+                      </div>
+                    </div>
+              </div>
 
         {/* Remaining Rankings */}
         <div className="px-6 pt-2" style={{backgroundColor: '#3d2c73'}}>
@@ -189,7 +189,7 @@ const RankingPage = ({ onNavigate }) => {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
         </div>
       </div>
     </div>

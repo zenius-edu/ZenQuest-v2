@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckCircle, XCircle, Trophy, RefreshCw, ArrowLeft, Play } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Trophy, RefreshCw, ArrowLeft, Play, X } from 'lucide-react';
 
 const QuizPage = ({ onNavigate }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(120); // 120 seconds
+  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes
   const [quizFinished, setQuizFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   const questions = [
     {
@@ -120,7 +121,7 @@ const QuizPage = ({ onNavigate }) => {
     });
     setShowAnswer(true);
 
-    // Auto move to next question after 1.5 seconds
+    // Auto move to next question after 0.5 seconds (even faster)
     setTimeout(() => {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
@@ -129,7 +130,7 @@ const QuizPage = ({ onNavigate }) => {
       } else {
         finishQuiz();
       }
-    }, 1500);
+    }, 500);
   };
 
   const finishQuiz = () => {
@@ -156,6 +157,12 @@ const QuizPage = ({ onNavigate }) => {
     setShowAnswer(false);
     setSelectedAnswer(null);
     setShowExplanation(false);
+    setShowEndConfirm(false);
+  };
+
+  const endQuiz = () => {
+    setShowEndConfirm(false);
+    finishQuiz();
   };
 
   const formatTime = (seconds) => {
@@ -166,9 +173,16 @@ const QuizPage = ({ onNavigate }) => {
 
   const getProgressBarColor = () => {
     const percentage = (timeLeft / 120) * 100;
-    if (percentage > 50) return 'from-green-400 to-green-500';
-    if (percentage > 25) return 'from-yellow-400 to-orange-400';
-    return 'from-red-400 to-red-500';
+    if (percentage > 50) return 'bg-green-500';
+    if (percentage > 25) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  const getTimerColor = () => {
+    const percentage = (timeLeft / 120) * 100;
+    if (percentage > 50) return 'text-green-600';
+    if (percentage > 25) return 'text-orange-600';
+    return 'text-red-600';
   };
 
   const getScoreColor = () => {
@@ -305,39 +319,57 @@ const QuizPage = ({ onNavigate }) => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="flex items-center justify-center min-h-screen p-6">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md text-center shadow-sm border border-gray-100">
-            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Trophy className="w-8 h-8 text-green-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">Quiz Complete!</h1>
-            <p className="text-gray-600 mb-6">{getScoreMessage()}</p>
-            
-            <div className="bg-gray-50 rounded-2xl p-6 mb-6">
-              <div className={`text-4xl font-bold mb-2 ${getScoreColor()}`}>
-                {score}/{questions.length}
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md text-center shadow-xl border border-gray-100">
+            {/* Trophy Icon with Animation */}
+            <div className="relative mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl flex items-center justify-center mx-auto shadow-lg">
+                <Trophy className="w-10 h-10 text-white" />
               </div>
-              <div className="text-gray-600 text-sm">
-                {Math.round((score / questions.length) * 100)}% correct
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-white" />
               </div>
             </div>
 
-            <div className="space-y-3">
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">Quiz Complete!</h1>
+            <p className="text-gray-600 mb-8 text-lg">{getScoreMessage()}</p>
+            
+            {/* Score Display */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 mb-8 border border-gray-200">
+              <div className="mb-4">
+                <div className={`text-5xl font-bold mb-2 ${getScoreColor()}`}>
+                  {score}/{questions.length}
+                </div>
+                <div className="text-gray-600 text-lg font-medium">
+                  {Math.round((score / questions.length) * 100)}% correct
+                </div>
+              </div>
+              
+              {/* Score Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className={`h-3 rounded-full transition-all duration-1000 ${score >= questions.length * 0.8 ? 'bg-green-500' : score >= questions.length * 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                  style={{ width: `${(score / questions.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
               <button
                 onClick={() => onNavigate && onNavigate('dashboard')}
-                className="w-full text-white py-3 rounded-xl font-medium transition-all duration-200 active:scale-95"
-                style={{background: '#372974'}}
+                className="w-full text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-200 hover:shadow-lg active:scale-95"
+                style={{background: 'linear-gradient(135deg, #372974 0%, #5b4397 100%)'}}
               >
                 Continue Learning
               </button>
               <button
                 onClick={() => setShowExplanation(true)}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-200 hover:shadow-lg active:scale-95"
               >
                 View Explanations
               </button>
               <button
                 onClick={restartQuiz}
-                className="w-full border-2 hover:bg-gray-50 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95"
+                className="w-full border-2 hover:bg-gray-50 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 hover:shadow-lg active:scale-95"
                 style={{borderColor: '#372974', color: '#372974'}}
               >
                 Retake Quiz
@@ -355,57 +387,108 @@ const QuizPage = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pb-32">
-        {/* Simple Quiz Header */}
-        <div className="px-6 py-6" style={{background: '#372974'}}>
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => onNavigate && onNavigate('dashboard')}
-              className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white hover:bg-opacity-30 transition-all"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
+        {/* End Quiz Confirmation Modal */}
+        {showEndConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">End Quiz?</h3>
+                <p className="text-sm text-gray-600">
+                  Are you sure you want to end the quiz? Your current progress will be saved.
+                </p>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowEndConfirm(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+                >
+                  Continue Quiz
+                </button>
+                <button
+                  onClick={endQuiz}
+                  className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors"
+                >
+                  End Quiz
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Improved Quiz Header */}
+        <div className="relative overflow-hidden" style={{background: 'linear-gradient(135deg, #372974 0%, #5b4397 100%)'}}>
+          <div className="px-6 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => onNavigate && onNavigate('dashboard')}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              
+              <div className="text-center flex-1 mx-4">
+                <h1 className="text-white text-lg font-bold mb-1">Practice Quiz</h1>
+                <div className="text-white text-opacity-80 text-sm">
+                  Question {currentQuestion + 1} of {questions.length}
+                </div>
+              </div>
+              
+              <button
+                onClick={() => setShowEndConfirm(true)}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
             
-            <div className="text-center">
-              <div className="text-white text-sm font-medium">
-                Question {currentQuestion + 1} of {questions.length}
+            {/* Timer Display */}
+            <div className="flex items-center justify-between text-white">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-5 h-5" />
+                <span className="font-medium">Time Remaining</span>
+              </div>
+              <div className="font-bold text-lg">
+                {formatTime(timeLeft)}
               </div>
             </div>
             
-            {/* Simple Timer */}
-            <div className="flex items-center space-x-2 text-white text-sm font-medium">
-              <Clock className="w-4 h-4" />
-              <span>{formatTime(timeLeft)}</span>
+            {/* Timer Progress Bar */}
+            <div className="w-full bg-white bg-opacity-20 rounded-full h-3 mt-3">
+              <div 
+                className="h-3 rounded-full transition-all duration-1000 bg-gradient-to-r from-orange-400 to-orange-500"
+                style={{ width: `${(timeLeft / 120) * 100}%` }}
+              ></div>
             </div>
           </div>
           
-          {/* Simple Progress Bar */}
-          <div className="mt-4 w-full bg-white bg-opacity-20 rounded-full h-2">
-            <div 
-              className="h-2 bg-white bg-opacity-60 rounded-full transition-all duration-1000"
-              style={{ width: `${(timeLeft / 120) * 100}%` }}
-            ></div>
-          </div>
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-5 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-5 rounded-full translate-y-12 -translate-x-12"></div>
         </div>
 
         {/* Question Content */}
         <div className="px-6 py-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6 leading-relaxed">
+          <div className="bg-white rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 leading-relaxed">
               {currentQ.question}
             </h2>
 
             {/* Answer Options */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {currentQ.options.map((option, index) => (
                 <button
                   key={index}
                   onClick={() => selectAnswer(index)}
                   disabled={showAnswer}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${getOptionStyle(index)} ${showAnswer ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-sm'}`}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${getOptionStyle(index)} ${showAnswer ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-sm'}`}
                 >
                   <div className="flex items-center space-x-3">
                     {getOptionIcon(index)}
-                    <span className="flex-1">{option}</span>
+                    <span className="flex-1 font-medium">{option}</span>
                   </div>
                 </button>
               ))}

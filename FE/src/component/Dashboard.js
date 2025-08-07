@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { User, Flame, Play, BookOpen, Pin, Clock } from 'lucide-react';
+import { User, Flame, Play, BookOpen, Pin, Clock, ChevronRight, ChevronDown } from 'lucide-react';
 
 const Dashboard = ({ onNavigate }) => {
   const [expandedSkills, setExpandedSkills] = useState(null);
   const [expandedReading, setExpandedReading] = useState(null);
+  const [expandedChapterSets, setExpandedChapterSets] = useState({});
   const [pinnedPlans, setPinnedPlans] = useState(new Set());
 
   const questPlans = [
@@ -15,12 +16,17 @@ const Dashboard = ({ onNavigate }) => {
       maxLevel: 5,
       skills: ['Functional Programming', 'Clojure', 'Backend Architecture', 'Database Design', 'API Development', 'Testing', 'Performance Optimization', 'Security'],
       completedSkills: 6,
-      chapters: [
-        { 
-          id: 1, 
-          title: 'Clojure Fundamentals', 
-          readingTime: '45 min',
-          content: `# Clojure Fundamentals
+      chapterSets: [
+        {
+          id: 1,
+          title: 'Fundamentals',
+          description: 'Core concepts and basics',
+          chapters: [
+            { 
+              id: 1, 
+              title: 'Clojure Fundamentals', 
+              readingTime: '45 min',
+              content: `# Clojure Fundamentals
 
 Welcome to the world of Clojure, a dynamic programming language that combines the power of functional programming with the flexibility of Lisp. Clojure is designed for building robust, scalable applications while maintaining code simplicity and elegance.
 
@@ -59,12 +65,12 @@ Clojure provides several built-in data types:
 - **Sets**: #{1 2 3}
 
 This foundation will prepare you for more advanced Clojure concepts and real-world application development.`
-        },
-        { 
-          id: 2, 
-          title: 'Functional Programming', 
-          readingTime: '35 min',
-          content: `# Functional Programming in Clojure
+            },
+            { 
+              id: 2, 
+              title: 'Functional Programming', 
+              readingTime: '35 min',
+              content: `# Functional Programming in Clojure
 
 Functional programming is a programming paradigm that treats computation as the evaluation of mathematical functions. It emphasizes immutability, pure functions, and declarative code style.
 
@@ -109,12 +115,19 @@ Clojure provides powerful higher-order functions for data transformation:
 \`\`\`
 
 Mastering these concepts will make you a more effective Clojure programmer.`
+            }
+          ]
         },
-        { 
-          id: 3, 
-          title: 'Web Development with Ring', 
-          readingTime: '40 min',
-          content: `# Web Development with Ring
+        {
+          id: 2,
+          title: 'Web Development',
+          description: 'Building web applications',
+          chapters: [
+            { 
+              id: 3, 
+              title: 'Web Development with Ring', 
+              readingTime: '40 min',
+              content: `# Web Development with Ring
 
 Ring is the foundational web framework for Clojure, providing a simple and flexible way to build web applications. It follows the principles of simplicity and composability.
 
@@ -177,12 +190,19 @@ Use libraries like Compojure for routing:
 \`\`\`
 
 Ring provides the foundation for building scalable web applications in Clojure.`
+            }
+          ]
         },
-        { 
-          id: 4, 
-          title: 'Database Integration', 
-          readingTime: '30 min',
-          content: `# Database Integration in Clojure
+        {
+          id: 3,
+          title: 'Database & DevOps',
+          description: 'Data persistence and deployment',
+          chapters: [
+            { 
+              id: 4, 
+              title: 'Database Integration', 
+              readingTime: '30 min',
+              content: `# Database Integration in Clojure
 
 Working with databases is essential for most web applications. Clojure provides excellent libraries for database integration, making it easy to work with both SQL and NoSQL databases.
 
@@ -265,12 +285,12 @@ Handle transactions properly:
 \`\`\`
 
 Database integration in Clojure is straightforward and powerful with the right tools.`
-        },
-        { 
-          id: 5, 
-          title: 'Deployment & DevOps', 
-          readingTime: '25 min',
-          content: `# Deployment & DevOps for Clojure
+            },
+            { 
+              id: 5, 
+              title: 'Deployment & DevOps', 
+              readingTime: '25 min',
+              content: `# Deployment & DevOps for Clojure
 
 Deploying Clojure applications requires understanding the JVM ecosystem and modern deployment practices. This guide covers essential deployment strategies and DevOps practices.
 
@@ -362,6 +382,8 @@ Use environment variables for configuration:
 - Sanitize user inputs
 
 Successful Clojure deployment requires attention to JVM performance, monitoring, and security best practices.`
+            }
+          ]
         }
       ]
     },
@@ -373,12 +395,17 @@ Successful Clojure deployment requires attention to JVM performance, monitoring,
       maxLevel: 4,
       skills: ['Linear Algebra', 'Calculus', 'Statistics', 'Probability', 'Mathematical Modeling', 'Research Methods'],
       completedSkills: 4,
-      chapters: [
-        { 
-          id: 1, 
-          title: 'Linear Algebra Foundations', 
-          readingTime: '50 min',
-          content: `# Linear Algebra Foundations
+      chapterSets: [
+        {
+          id: 1,
+          title: 'Foundation Mathematics',
+          description: 'Core mathematical concepts',
+          chapters: [
+            { 
+              id: 1, 
+              title: 'Linear Algebra Foundations', 
+              readingTime: '50 min',
+              content: `# Linear Algebra Foundations
 
 Linear algebra forms the mathematical foundation for many areas of mathematics, science, and engineering. Understanding vectors, matrices, and linear transformations is essential for advanced mathematics.
 
@@ -418,12 +445,12 @@ Linear algebra has applications in:
 - Economics and optimization
 
 Understanding these foundations opens doors to advanced mathematical concepts.`
-        },
-        { 
-          id: 2, 
-          title: 'Advanced Calculus', 
-          readingTime: '60 min',
-          content: `# Advanced Calculus
+            },
+            { 
+              id: 2, 
+              title: 'Advanced Calculus', 
+              readingTime: '60 min',
+              content: `# Advanced Calculus
 
 Advanced calculus extends the fundamental concepts of limits, derivatives, and integrals to more complex scenarios involving multiple variables and advanced techniques.
 
@@ -464,12 +491,19 @@ Functions that assign vectors to points in space, used in physics to model force
 - **Divergence Theorem**
 
 These theorems connect different types of integrals and have profound applications in physics and engineering.`
+            }
+          ]
         },
-        { 
-          id: 3, 
-          title: 'Statistical Analysis', 
-          readingTime: '45 min',
-          content: `# Statistical Analysis
+        {
+          id: 2,
+          title: 'Statistics & Probability',
+          description: 'Data analysis and uncertainty',
+          chapters: [
+            { 
+              id: 3, 
+              title: 'Statistical Analysis', 
+              readingTime: '45 min',
+              content: `# Statistical Analysis
 
 Statistical analysis provides tools for understanding data, making inferences, and drawing conclusions from observations. It forms the foundation for data science and research.
 
@@ -521,12 +555,12 @@ Extends linear regression to multiple predictor variables.
 Provide ranges of plausible values for population parameters based on sample data.
 
 Statistical analysis enables evidence-based decision making across all fields of study.`
-        },
-        { 
-          id: 4, 
-          title: 'Probability Theory', 
-          readingTime: '40 min',
-          content: `# Probability Theory
+            },
+            { 
+              id: 4, 
+              title: 'Probability Theory', 
+              readingTime: '40 min',
+              content: `# Probability Theory
 
 Probability theory provides the mathematical framework for quantifying uncertainty and randomness. It underlies statistics, machine learning, and many areas of science.
 
@@ -588,6 +622,8 @@ Measures the spread of a random variable around its expected value.
 As the number of trials increases, sample averages converge to expected values.
 
 Probability theory provides the foundation for understanding uncertainty in mathematics and science.`
+            }
+          ]
         }
       ]
     },
@@ -599,12 +635,17 @@ Probability theory provides the foundation for understanding uncertainty in math
       maxLevel: 3,
       skills: ['Machine Learning', 'Deep Learning', 'Python', 'TensorFlow', 'Data Analysis'],
       completedSkills: 2,
-      chapters: [
-        { 
-          id: 1, 
-          title: 'Machine Learning Basics', 
-          readingTime: '55 min',
-          content: `# Machine Learning Basics
+      chapterSets: [
+        {
+          id: 1,
+          title: 'Machine Learning Basics',
+          description: 'Foundation concepts and algorithms',
+          chapters: [
+            { 
+              id: 1, 
+              title: 'Machine Learning Basics', 
+              readingTime: '55 min',
+              content: `# Machine Learning Basics
 
 Machine learning is a subset of artificial intelligence that enables computers to learn and make decisions from data without being explicitly programmed for every scenario.
 
@@ -662,12 +703,19 @@ Classifies based on the majority class of nearest neighbors.
 - **R-squared**: Proportion of variance explained
 
 Machine learning provides powerful tools for extracting insights from data and making intelligent predictions.`
+            }
+          ]
         },
-        { 
-          id: 2, 
-          title: 'Deep Learning Introduction', 
-          readingTime: '65 min',
-          content: `# Deep Learning Introduction
+        {
+          id: 2,
+          title: 'Advanced ML & Deep Learning',
+          description: 'Neural networks and advanced techniques',
+          chapters: [
+            { 
+              id: 2, 
+              title: 'Deep Learning Introduction', 
+              readingTime: '65 min',
+              content: `# Deep Learning Introduction
 
 Deep learning is a subset of machine learning that uses artificial neural networks with multiple layers to model and understand complex patterns in data.
 
@@ -746,12 +794,19 @@ Algorithm for updating network weights based on errors.
 - Autonomous vehicles
 
 Deep learning has revolutionized AI by enabling machines to achieve human-level performance in many tasks.`
+            }
+          ]
         },
-        { 
-          id: 3, 
-          title: 'Python for ML', 
-          readingTime: '40 min',
-          content: `# Python for Machine Learning
+        {
+          id: 3,
+          title: 'Python for ML',
+          description: 'Programming tools and libraries',
+          chapters: [
+            { 
+              id: 3, 
+              title: 'Python for ML', 
+              readingTime: '40 min',
+              content: `# Python for Machine Learning
 
 Python has become the dominant language for machine learning due to its simplicity, extensive libraries, and strong community support.
 
@@ -867,6 +922,8 @@ mse = mean_squared_error(y_test, predictions)
 - Dependency management with pip/conda
 
 Python's ecosystem makes it an ideal choice for machine learning projects from prototyping to production.`
+            }
+          ]
         }
       ]
     }
@@ -905,6 +962,13 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
     window.zenverseSelectedPlan = plan;
     window.zenverseSelectedChapter = chapter;
     onNavigate && onNavigate('reading-page');
+  };
+
+  const toggleChapterSet = (planId, chapterSetId) => {
+    setExpandedChapterSets(prev => ({
+      ...prev,
+      [`${planId}-${chapterSetId}`]: prev[`${planId}-${chapterSetId}`] ? null : chapterSetId
+    }));
   };
 
   return (
@@ -955,12 +1019,6 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
                     </div>
                   </div>
                 </div>
-                
-                {/* Streak Counter */}
-                <div className="flex items-center space-x-2 bg-orange-50 px-4 py-2 rounded-full">
-                  <Flame className="w-5 h-5 text-orange-500" />
-                  <span className="text-orange-600 font-bold text-sm">7</span>
-                </div>
               </div>
             </div>
 
@@ -973,8 +1031,8 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
               >
                 <div className="flex items-center space-x-3">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
                   <div>
                     <h3 className="text-lg font-bold text-white mb-0.5">Create New Quest</h3>
                     <p className="text-white text-opacity-80 text-xs">Start a personalized learning journey</p>
@@ -1080,13 +1138,9 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
                     <div className="mb-4">
                       <button
                         onClick={() => setExpandedSkills(expandedSkills === plan.id ? null : plan.id)}
-                        className="w-full bg-gray-50 hover:bg-gray-100 rounded-xl py-1 px-3 transition-colors flex items-center justify-between"
+                        className="w-full hover:bg-gray-50 rounded-xl py-2 px-3 transition-colors flex items-center justify-center"
                       >
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                          <span className="font-medium text-gray-900 text-sm">Skills in this Quest</span>
-                        </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-sm text-gray-500">
                           {expandedSkills === plan.id ? 'Hide' : 'Show'} {plan.skills.length} skills
                         </div>
                       </button>
@@ -1098,8 +1152,8 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
                         <div className="grid grid-cols-1 gap-2">
                           {plan.skills.map((skill, index) => (
                             <div key={index} className="flex items-center space-x-2">
-                              <div className="w-2 h-2 rounded-full" style={{backgroundColor: index < plan.completedSkills ? '#f97316' : '#d1d5db'}}></div>
-                              <span className={`text-xs ${index < plan.completedSkills ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                              <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                              <span className="text-sm text-gray-900">
                                 {skill}
                               </span>
                             </div>
@@ -1116,30 +1170,63 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
                         <h4 className="font-bold text-gray-900 mb-4 text-lg">Reading Materials</h4>
                         
                         <div className="space-y-3">
-                          {plan.chapters && plan.chapters.length > 0 ? (
-                            plan.chapters.map((chapter, index) => (
-                              <div
-                                key={chapter.id}
-                                className="bg-white rounded-xl p-4 border border-gray-200 flex items-center justify-between"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-10 h-10 text-white rounded-xl flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#372974'}}>
-                                    {index + 1}
-                                  </div>
-                                  <div>
-                                    <h5 className="font-medium text-gray-900 text-sm">{chapter.title}</h5>
-                                    <div className="flex items-center space-x-1 mt-1">
-                                      <Clock className="w-3 h-3 text-gray-400" />
-                                      <span className="text-xs text-gray-500">{chapter.readingTime}</span>
+                          {plan.chapterSets && plan.chapterSets.length > 0 ? (
+                            plan.chapterSets.map((chapterSet, index) => (
+                              <div key={chapterSet.id} className="space-y-2">
+                                <div className="flex items-center justify-between py-2">
+                                  <div className="flex items-center space-x-3 flex-1">
+                                    <button
+                                      onClick={() => toggleChapterSet(plan.id, chapterSet.id)}
+                                      className="p-1 hover:opacity-70 transition-opacity duration-200"
+                                      title={expandedChapterSets[`${plan.id}-${chapterSet.id}`] ? 'Collapse' : 'Expand'}
+                                    >
+                                      {expandedChapterSets[`${plan.id}-${chapterSet.id}`] ? (
+                                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                                      ) : (
+                                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                                      )}
+                                    </button>
+                                    <div className="flex-1">
+                                      <h5 className="font-medium text-gray-900 text-sm">{chapterSet.title}</h5>
+                                      <p className="text-xs text-gray-500">{chapterSet.description}</p>
                                     </div>
                                   </div>
                                 </div>
-                                <button
-                                  onClick={() => handleReadChapter(plan, chapter)}
-                                  className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
-                                >
-                                  Read
-                                </button>
+                                {expandedChapterSets[`${plan.id}-${chapterSet.id}`] && (
+                                  <div className="ml-6 space-y-2">
+                                    {chapterSet.chapters && chapterSet.chapters.length > 0 ? (
+                                      chapterSet.chapters.map((chapter, chapterIndex) => (
+                                        <div
+                                          key={chapter.id}
+                                          className="flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                                        >
+                                          <div className="flex items-center space-x-3">
+                                            <div className="w-6 h-6 text-white rounded-full flex items-center justify-center text-xs font-medium" style={{backgroundColor: '#372974'}}>
+                                              {chapterIndex + 1}
+                                            </div>
+                                            <div>
+                                              <h6 className="font-medium text-gray-900 text-sm">{chapter.title}</h6>
+                                              <div className="flex items-center space-x-1 mt-0.5">
+                                                <Clock className="w-3 h-3 text-gray-400" />
+                                                <span className="text-xs text-gray-500">{chapter.readingTime}</span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <button
+                                            onClick={() => handleReadChapter(plan, chapter)}
+                                            className="bg-orange-500 hover:bg-orange-600 text-white py-1.5 px-3 rounded-lg text-xs font-medium transition-colors"
+                                          >
+                                            Read
+                                          </button>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div className="text-center py-4">
+                                        <p className="text-gray-500 text-xs">No chapters available</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             ))
                           ) : (

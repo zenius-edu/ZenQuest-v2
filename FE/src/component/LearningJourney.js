@@ -310,14 +310,14 @@ const LearningJourney = ({ onNavigate }) => {
       {/* Header with Profile */}
       <div className="px-4 py-6 pb-12">
         <div className="max-w-full mx-auto min-h-[calc(100vh-8rem)] flex flex-col">
-
+          
           {/* Learning Journey Content - Centered */}
           <div className="px-4 flex-1 flex flex-col justify-center items-center">
             <div className="text-center mb-6">
               <div className="mb-6">
                 <img 
-                  src="/images/zenquest mascot.png" 
-                  alt="ZenQuest Mascot" 
+                  src="/images/zenbot.png" 
+                  alt="ZenBot" 
                   className="w-96 h-96 object-contain mx-auto"
                 />
               </div>
