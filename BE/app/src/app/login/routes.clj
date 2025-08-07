@@ -6,4 +6,5 @@
 (defn api-routes
   [db]
   ["/login"
-   ["/sso-login" {:post (partial login/sso-login db)}]])
+   ["/google" {:post (partial login/login-or-register-google db)}]
+   ["/test" {:post (partial login/test-login db)}]])
