@@ -64,9 +64,16 @@
       (let [email (:email google-validation)
             user (mc/find-one-as-map (:db-zenquest db) "users" {:email email})]
         (if user
-          {:new-user? false
-           :token (u/create-token (assoc user :exp (u/epoch-time (* 60 60 24 30))))
-           :user-data user}
+          (let [updated-user (if (:universal-learning-id user)
+                               user
+                               (let [user-id-str (str (:_id user))]
+                                 (mc/update (:db-zenquest db) "users"
+                                            {:_id (:_id user)}
+                                            {:$set {:universal-learning-id user-id-str}})
+                                 (assoc user :universal-learning-id user-id-str)))]
+            {:new-user? false
+             :token (u/create-token (assoc updated-user :exp (u/epoch-time (* 60 60 24 30))))
+             :user-data updated-user})
           (let [new-user-data {:email email
                                :name (or (:name google-validation) "New ZenQuest User")}
                 new-user (register-user db new-user-data)]
@@ -74,13 +81,13 @@
              :token (u/create-token (assoc new-user :exp (u/epoch-time (* 60 60 24 30))))
              :user-data new-user}))))))
 
-(comment
-  (register-user (-> @dev/dev-system :dbase) {:name "Bagas Prima" :email "bagas.prima@zenius.com" :role "admin", :approved true}))
-
 (defn get-current-user
   [db request]
-  (let [user-id (get-in request [:user :_id])]
+  (let [user-id (get-in request [:user :universal-learning-id])]
     (u/info "getting user from db with id: " user-id)
-    (-> (mc/find-one-as-map (:db-zenquest db) "users" {:_id user-id})
-        (u/pres))))
+    (->> (mc/find-one-as-map (:db-zenquest db) "users" {:universal-learning-id user-id})
+        (u/let-pres))))
 
+
+(comment
+  (register-user (-> @dev/dev-system :dbase) {:name "Bagas Prima" :email "bagas.prima@zenius.com" :role "admin", :approved true}))
