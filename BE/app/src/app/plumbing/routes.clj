@@ -28,9 +28,9 @@
 
 (defn create-routes
   "Creates the whole routes for the system"
-  [db openai perplexity]
+  [db openai]
   (ring/router
    [["/" {:get (partial api-check db)}]
-    (api db openai  web/backware)]))
+    (api db openai web/backware)]))
 
 
