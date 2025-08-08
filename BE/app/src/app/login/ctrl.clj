@@ -1,41 +1,39 @@
 (ns app.login.ctrl
   (:require
     [app.utils :as u]
-    [app.login.usecase :as usecase]))
-
-(defn test-login
-  "Login using sso"
-  [db request]
-  (u/info "Masuk ke sso-login")
-  (let [{:keys [access-token email name] :as user-data} (get-in request [:body :data])
-        verified-data (usecase/verify-google-credentials db access-token)
-        auth-result (usecase/auth-user db user-data)] 
-    (case (:status auth-result)
-      "ok" {:status  200
-            :headers {"Content-Type" "application/json"}
-            :body    auth-result}
-      
-      "unapproved" {:status  403
-                    :headers {"Content-Type" "application/json"}
-                    :body    auth-result}
-      
-      "waiting" {:status  401
-                 :headers {"Content-Type" "application/json"}
-                 :body    auth-result})))
+    [app.login.usecase :as usecase]
+    [monger.collection :as mc]))
 
 (defn login-or-register-google
-  "Login using google access token"
+  "Handler for login or registration via Google OAuth.
+   Validates the incoming request for a token and passes it to the use case.
+   Returns a 200 or 201 on success, 400 for bad requests, and 500 for internal errors."
   [db request]
-  (u/info "Getting into login-token controller")
-  (let [{:keys [access-token email name]} (get-in request [:body :data])
-        ;; _ (usecase/verify-google-credentials db access-token)
-        user-data {:email email
-                   :name name}]
-    (if access-token 
-    {:status 200
-     :body   {:message   "Login successful"
-              :token     (u/create-token (assoc user-data :exp (u/epoch-time (* 60 60 24 30))))
-              :user-data user-data}}
-    {:status 400
-     :body   {:message   "Missing access-token"}}) 
-    ))
+  (if-let [token (get-in request [:body :token])]
+    (try
+      (let [{:keys [new-user? error] :as result} (usecase/login-or-register-google db token)]
+        (if error
+          {:status 401 :body result}
+          (let [user-data (:user-data result)
+                response-body {:token (:token result)
+                               :user-data user-data
+                               :message (if new-user?
+                                          "User registered and logged in successfully"
+                                          "Login successful")}]
+            {:status (if new-user? 201 200)
+             :body response-body})))
+      (catch Exception e
+        (u/error e "Error processing Google login")
+        {:status 500 :body {:message "Internal server error"}}))
+    {:status 400 :body {:message "Missing token in request"}}))
+
+(defn get-current-user
+  [db request]
+  (try
+    (if-let [result (usecase/get-current-user db request)]
+      {:status 200 :body result}
+      {:status 404 :body {:message "User not found"}})
+    (catch Exception e
+      (u/error e "Error fetching current user")
+      {:status 500 :body {:message "Internal server error"}})))
+    

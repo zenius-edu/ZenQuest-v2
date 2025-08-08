@@ -22,7 +22,7 @@
   ["/api"
    ["/v1"
     ["" {:get (partial api-check db)}] 
-    (login/api-routes db) 
+    (login/api-routes db midware) 
     (quest/api-routes db openai midware)
     ]])
 

@@ -12,7 +12,7 @@
     (u/info "=======================================================================")
     (if-let [token (get-in request [:headers "authorization"])]
       (if-let [claims (u/verify-token (second (re-find #"^Bearer (.+)$" token)))]
-        (handler (assoc request :identity claims))
+        (handler (assoc request :user claims))
         {:status 401
          :body {:error "Invalid or expired token"}})
       {:status 401
