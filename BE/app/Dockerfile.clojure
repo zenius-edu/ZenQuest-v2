@@ -1,0 +1,29 @@
+# Start Dockerfile
+ARG DIR=clojure-backend
+
+FROM ghcr.io/zenius-edu/clojure:temurin-11-lein-jammy-amd64 as clojure-builder
+# FROM --platform=linux/amd64 clojure:temurin-8-lein-jammy as clojure-builder
+# redeclare ARG because ARG not in build environment
+ARG DIR
+WORKDIR /${DIR}
+COPY . .
+# copy dummy profiles.clj file, environ req
+COPY ./profiles-template-prod.clj ./profiles.clj
+RUN lein uberjar
+
+FROM ghcr.io/zenius-edu/amazoncorretto:11-alpine3.15-amd64 as runner
+# FROM --platform=linux/amd64 amazoncorretto:11-alpine3.15 as runner
+ARG DIR
+WORKDIR /${DIR}
+COPY --from=clojure-builder /${DIR}/target/uberjar-app.jar ./
+COPY --from=clojure-builder /${DIR}/.env ./
+
+# # Copy the entrypoint script
+# COPY ./clojure-entrypoint.sh /${DIR}/clojure-entrypoint.sh
+
+EXPOSE 8000
+# ENTRYPOINT ["sh", "-c", "ls /clojure-backend/* && export $(grep -v '^#' /clojure-backend/.env | xargs)  && java -jar uberjar-app.jar"]
+# export $(grep -v '^#' .env | xargs) && java -jar uberjar-app.jar
+# source .env && java -jar uberjar-app.jar
+#ENTRYPOINT ["sh", "-c", "ls -a /clojure-backend/* && . /clojure-backend/.env  && java -jar uberjar-app.jar"]
+ENTRYPOINT ["sh", "-c", "ls -a /clojure-backend/* && set -a && . /clojure-backend/.env && set +a && env && java -XX:MaxRAMPercentage=80 -XX:MinRAMPercentage=30 -XX:InitialRAMPercentage=10 -jar uberjar-app.jar"]
