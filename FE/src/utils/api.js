@@ -1,7 +1,7 @@
 // Backend API Configuration
 import { safeError, safeAsyncCall } from './errorHandler';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1';
 
 // Helper function for better error handling
 const handleApiError = (error, context) => {
@@ -14,6 +14,7 @@ export const api = {
   // Google Login endpoint
   googleLogin: async (accessToken, userInfo) => {
     return safeAsyncCall(async () => {
+      try { console.log('[API] POST', `${API_BASE_URL}/login/google`, { email: userInfo?.email }); } catch (_) {}
       const response = await fetch(`${API_BASE_URL}/login/google`, {
         method: 'POST',
         headers: {
