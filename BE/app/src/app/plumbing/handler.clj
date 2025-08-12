@@ -18,8 +18,8 @@
    :body   {:status  "error"
             :message "Not Found"}})
 
-(defn create-handler [db openai perplexity]
-    (-> (routes/create-routes db openai perplexity)
+(defn create-handler [db openai]
+    (-> (routes/create-routes db openai)
         (ring/ring-handler
          (ring/create-default-handler
           {:not-found not-found-handler}))
@@ -44,10 +44,10 @@
       ;; trace-http/wrap-exception-event
         (wrap-defaults (assoc-in site-defaults [:security :anti-forgery] false))))
 
-(defrecord Handler [dbase openai perplexity]
+(defrecord Handler [dbase openai]
   component/Lifecycle
   (start [this]
-    (assoc this :handler (create-handler dbase openai perplexity)))
+    (assoc this :handler (create-handler dbase openai)))
   (stop [this]
     this))
 

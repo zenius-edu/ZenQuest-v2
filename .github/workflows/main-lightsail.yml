@@ -1,0 +1,170 @@
+name: Main [staging] lightsail
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'BE/app/**'   # [Supposedly] Trigger backend job only if there are changes in the backend directory
+      # - 'FE/**'  # [Supposedly] Trigger frontend job only if there are changes in the frontend directory
+
+env:
+  AWS_REGION: 'ap-southeast-1'
+  SERVICE_NAME: 'zenquest-be-staging'
+  SERVICE_NAME_SSM: 'zenquest'
+  SSM_PREFIX: 'github-zenius-edu'
+  ENV: "staging"
+  # S3_BUCKET_URL: 's3://devlabs.zenius.com'
+  # CF_DISTRIBUTION_ID: 'E1YVH0RMHXDL4V'
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+  packages: read
+
+jobs:
+  build-clojure:
+    if: github.event.head_commit.message != 'skip backend'  # Skip if commit message contains 'skip backend'
+    name: Deploy Backend to Container
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BE/app
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: Login to GitHub Container Registry
+      id: login-ghcr
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ARN_OIDC_ACCESS }}
+        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Upgrade AWS CLI version and setup lightsailctl
+      run: |
+        aws --version
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+        which aws
+        aws --version
+        sudo curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "/usr/local/bin/lightsailctl"
+        sudo chmod +x /usr/local/bin/lightsailctl
+
+    - name: Get & put secrets
+      run: >
+        aws ssm get-parameter --with-decryption --name /$SSM_PREFIX/$SERVICE_NAME_SSM/backend/$ENV | jq -r ".Parameter.Value" > .env
+
+    - name: Create Build and Tag
+      env:
+        IMAGE_TAG: latest
+        IMAGE_SHA_TAG: ${{ github.sha }}
+      run: |
+        docker build -f Dockerfile.clojure -t ${{ env.SERVICE_NAME }}:$IMAGE_TAG .
+        docker build -f Dockerfile.clojure -t ${{ env.SERVICE_NAME }}:$IMAGE_SHA_TAG .
+        # docker push $ECR_REGISTRY/${{env.ECR_REPOSITORY}}:$IMAGE_TAG
+        # docker push $ECR_REGISTRY/${{env.ECR_REPOSITORY}}:$IMAGE_SHA_TAG
+
+    - name: Push the Docker Image to lightsail
+      env:
+        IMAGE_URL: ${{ env.SERVICE_NAME }}:${{ github.sha }}
+      run: >
+        aws lightsail push-container-image
+        --service-name ${{ env.SERVICE_NAME }}
+        --image $IMAGE_URL
+        --region ${{ env.AWS_REGION }}
+        --label git-push
+
+    - name: Save updated LIGHTSAIL_IMAGE_TAG
+      run: |
+        echo "LIGHTSAIL_DOCKER_IMAGE=$(aws lightsail get-container-images --service-name ${{ env.SERVICE_NAME }} --region ${{ env.AWS_REGION }} | jq -r .containerImages[0].image)"  >> $GITHUB_ENV
+
+    - name: Start New Deployment to Light Sail
+      run: |
+        aws lightsail create-container-service-deployment  --region ${{ env.AWS_REGION }} \
+        --service-name ${{env.SERVICE_NAME}} \
+        --output yaml \
+        --containers "{
+          \"${{env.SERVICE_NAME}}\": {
+          \"image\": \"$LIGHTSAIL_DOCKER_IMAGE\",
+          \"environment\": {
+          \"VERSION\": \"${{github.run_number}}\"
+          },
+          \"ports\": {
+          \"8000\": \"HTTP\"
+              }
+            }
+          }" \
+          --public-endpoint "{
+            \"containerName\": \"${{env.SERVICE_NAME}}\",
+            \"containerPort\": 8000,
+            \"healthCheck\": {
+              \"path\": \"/\",
+              \"intervalSeconds\": 10,
+              \"healthyThreshold\": 2,
+              \"unhealthyThreshold\": 4,
+              \"timeoutSeconds\": 3,
+              \"successCodes\": \"200-299\"
+            }
+          }"
+
+  # deploy-fe:
+  #   if: github.event.head_commit.message != 'skip frontend'  # Skip if commit message contains 'skip frontend'
+  #   name: Deploy Frontend to S3
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: frontend/alfa
+  #   environment: production
+  #   env:
+  #     CI: false
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v4
+
+  #   - name: Set up Node
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: 18.17.0
+
+  #   - name: Cache node_modules
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: |
+  #         ~/.npm
+  #         ${{ github.workspace }}/node_modules
+  #       key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}-
+
+  #   - name: Dependency installs
+  #     run: npm ci
+
+  #   - name: Configure AWS Credentials
+  #     uses: aws-actions/configure-aws-credentials@v4
+  #     with:
+  #       role-to-assume: ${{ secrets.AWS_ARN_OIDC_ACCESS }}
+  #       role-session-name: GitHub_to_AWS_via_FederatedOIDC
+  #       aws-region: ${{ env.AWS_REGION }}
+
+  #   - name: Get & put secrets
+  #     run: >
+  #       aws ssm get-parameter --with-decryption --name /$SSM_PREFIX/$SERVICE_NAME_SSM/frontend/$ENV | jq -r ".Parameter.Value" > .env
+
+  #   - name: Build and Push to S3
+  #     run: |
+  #       npm run build
+  #       aws s3 sync --delete ./build ${{ env.S3_BUCKET_URL }}
+
+  #   - name: Invalidate CF
+  #     run: >
+  #       aws cloudfront create-invalidation --distribution-id ${{ env.CF_DISTRIBUTION_ID }} --paths "/*" "/" # > /dev/null 2>&1

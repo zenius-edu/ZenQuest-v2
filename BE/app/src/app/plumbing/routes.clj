@@ -22,15 +22,15 @@
   ["/api"
    ["/v1"
     ["" {:get (partial api-check db)}] 
-    (login/api-routes db) 
+    (login/api-routes db midware) 
     (quest/api-routes db openai midware)
     ]])
 
 (defn create-routes
   "Creates the whole routes for the system"
-  [db openai perplexity]
+  [db openai]
   (ring/router
    [["/" {:get (partial api-check db)}]
-    (api db openai  web/backware)]))
+    (api db openai web/backware)]))
 
 
