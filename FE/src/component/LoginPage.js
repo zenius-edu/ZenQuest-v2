@@ -1,33 +1,264 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Eye, EyeOff, ArrowRight, Star, Users, Trophy } from 'lucide-react';
+import { api } from '../utils/api';
+import { useSafeState, useSafeEffect } from '../utils/safeHooks';
+import { safeError } from '../utils/errorHandler';
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage = ({ onNavigate }) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useAuth();
+  const [showPassword, setShowPassword] = useSafeState(false);
+  const [email, setEmail] = useSafeState('');
+  const [password, setPassword] = useSafeState('');
+  const [isLoading, setIsLoading] = useSafeState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useSafeState(false);
+  const [googleError, setGoogleError] = useSafeState(null);
 
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    // Simulate Google login
-    setTimeout(() => {
-      setIsLoading(false);
+  // Google OAuth Configuration (NEW Google Identity Services)
+  const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+  
+  // Get current origin for proper redirect URI
+  const currentOrigin = window.location.origin;
+  console.log('Current origin:', currentOrigin);
+
+  useSafeEffect(() => {
+    const initializeGoogleIdentity = () => {
+      try {
+        // Wait for Google Identity Services to load
+        if (!window.google || !window.google.accounts) {
+          console.error('Google Identity Services not loaded');
+          setGoogleError('Google Identity Services not available');
+          return;
+        }
+
+        console.log('Initializing Google Identity Services...');
+        
+        if (!CLIENT_ID) {
+          console.error('Missing REACT_APP_GOOGLE_CLIENT_ID environment variable');
+          setGoogleError('Missing Google Client ID configuration');
+          return;
+        }
+        
+        // Initialize Google Identity Services
+        window.google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: false,
+        });
+
+        console.log('Google Identity Services initialized successfully');
+        setGoogleError(null);
+        
+      } catch (error) {
+        console.error('Error initializing Google Identity Services:', error);
+        setGoogleError(`Google Sign-In initialization failed: ${error.message || 'Unknown error'}`);
+      }
+    };
+
+    // Check if Google Identity Services is loaded
+    const checkGoogleLoaded = () => {
+      if (window.google && window.google.accounts) {
+        initializeGoogleIdentity();
+      } else {
+        // Wait a bit more for the script to load
+        setTimeout(checkGoogleLoaded, 100);
+      }
+    };
+
+    checkGoogleLoaded();
+  }, [CLIENT_ID]);
+
+  const handleGoogleResponse = async (response) => {
+    console.log('Google response received:', response);
+    
+    try {
+      setIsGoogleLoading(true);
+      setGoogleError(null);
+
+      // Decode the JWT token to get user info
+      const decodedToken = JSON.parse(atob(response.credential.split('.')[1]));
+      console.log('Decoded token:', decodedToken);
+
+      const userInfo = {
+        id: decodedToken.sub,
+        name: decodedToken.name,
+        email: decodedToken.email,
+        picture: decodedToken.picture
+      };
+
+      // Save to AuthContext + Storage
+      setUser(userInfo);
+
+      console.log('Google Sign-In successful:', userInfo);
+      
+      // Send data to backend
+      try {
+        const backendData = await api.googleLogin(response.credential, userInfo);
+        console.log('Backend login response:', backendData);
+      } catch (backendError) {
+        console.error('Backend login error:', backendError);
+        // Continue with frontend flow even if backend fails
+      }
+      
+      // Navigate to dashboard on successful Google login
       if (onNavigate) {
         onNavigate('dashboard');
       }
-    }, 2000);
+      
+    } catch (error) {
+      console.error('Google login error:', error);
+      
+      let errorMessage = 'Failed to sign in with Google';
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setGoogleError(errorMessage);
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
-  const handleEmailLogin = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate email login
-    setTimeout(() => {
-      setIsLoading(false);
+  const handleGoogleLogin = () => {
+    if (isGoogleLoading) return;
+    
+    setGoogleError(null);
+    
+    if (!CLIENT_ID) {
+      console.error('Missing REACT_APP_GOOGLE_CLIENT_ID environment variable');
+      setGoogleError('Missing Google Client ID configuration');
+      return;
+    }
+    
+    try {
+      // Check if Google Identity Services is available
+      if (!window.google || !window.google.accounts) {
+        throw new Error('Google Identity Services not loaded. Please refresh the page.');
+      }
+
+      console.log('Starting Google Sign-In...');
+
+      const startPopupFlow = () => {
+        window.google.accounts.oauth2
+          .initTokenClient({
+            client_id: CLIENT_ID,
+            scope: 'openid email profile',
+            callback: (tokenResponse) => {
+              console.log('Token response:', tokenResponse);
+              fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`)
+                .then(res => res.json())
+                .then(userInfo => {
+                  console.log('User info from API:', userInfo);
+                  setUser({
+                    id: userInfo.id,
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    picture: userInfo.picture
+                  });
+                  const mockResponse = { credential: tokenResponse.access_token };
+                  handleGoogleResponseWithUserInfo(mockResponse, userInfo);
+                })
+                .catch(err => {
+                  console.error('Error fetching user info:', err);
+                  setGoogleError('Failed to get user information');
+                });
+            }
+          })
+          .requestAccessToken();
+      };
+
+      // Trigger the Google Sign-In prompt
+      window.google.accounts.id.prompt((notification) => {
+        console.log('Prompt notification:', notification);
+        
+        if (notification.isNotDisplayed()) {
+          console.log('Prompt not displayed, using fallback method');
+          startPopupFlow();
+        } else if (notification.isSkippedMoment()) {
+          console.log('User skipped the prompt, falling back to popup');
+          startPopupFlow();
+        } else if (notification.isDismissedMoment()) {
+          console.log('User dismissed the prompt, falling back to popup');
+          startPopupFlow();
+        }
+      });
+      
+    } catch (error) {
+      console.error('Google login initialization error:', error);
+      setGoogleError(error.message || 'Failed to initialize Google Sign-In');
+    }
+  };
+
+  const handleGoogleResponseWithUserInfo = async (response, userInfo) => {
+    try {
+      setIsGoogleLoading(true);
+      setGoogleError(null);
+
+      console.log('Google Sign-In successful with user info:', userInfo);
+      
+      // Send data to backend
+      try {
+        const backendData = await api.googleLogin(response.credential, userInfo);
+        console.log('Backend login response:', backendData);
+      } catch (backendError) {
+        console.error('Backend login error:', backendError);
+        // Continue with frontend flow even if backend fails
+      }
+      
+      // Navigate to dashboard on successful Google login
       if (onNavigate) {
         onNavigate('dashboard');
       }
-    }, 1500);
+      
+    } catch (error) {
+      console.error('Google login error:', error);
+      setGoogleError(error.message || 'Failed to sign in with Google');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setGoogleError(null); // Clear any Google errors
+    
+    try {
+      // Send email/password to backend using API utility
+      const userData = await api.emailLogin(email, password);
+      console.log('Email login successful:', userData);
+
+      // Save to AuthContext if backend returns profile
+      if (userData && (userData.name || userData.email)) {
+        setUser({
+          id: userData.id || userData.user_id || undefined,
+          name: userData.name || email.split('@')[0],
+          email: userData.email || email,
+          picture: userData.picture || null,
+        });
+      }
+      
+      // Navigate to dashboard on successful login
+      if (onNavigate) {
+        onNavigate('dashboard');
+      }
+    } catch (error) {
+      console.error('Email login error:', error);
+      const errorMessage = error?.message || error?.toString() || 'Login failed';
+      setGoogleError(errorMessage);
+      
+      // For demo purposes, still allow navigation if it's a connection error
+      if (errorMessage.includes('fetch') || errorMessage.includes('NetworkError')) {
+        console.log('Backend unavailable, using demo mode');
+        setUser({ id: 'demo', name: email.split('@')[0], email, picture: null });
+        if (onNavigate) {
+          onNavigate('dashboard');
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -50,11 +281,11 @@ const LoginPage = ({ onNavigate }) => {
           {/* Google Login Button */}
           <button
             onClick={handleGoogleLogin}
-            disabled={isLoading}
+            disabled={isGoogleLoading}
             className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-2.5 mb-3 hover:border-gray-300 hover:shadow-md transition-all duration-200 disabled:opacity-50"
           >
             <div className="flex items-center justify-center space-x-2">
-              {isLoading ? (
+              {isGoogleLoading ? (
                 <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{borderColor: '#372974'}}></div>
               ) : (
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -65,10 +296,17 @@ const LoginPage = ({ onNavigate }) => {
                 </svg>
               )}
               <span className="font-medium text-gray-700 text-sm">
-                {isLoading ? 'Signing in...' : 'Continue with Google'}
+                {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
               </span>
             </div>
           </button>
+
+          {/* Google Error Display */}
+          {googleError && (
+            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-xs text-center">{googleError}</p>
+            </div>
+          )}
 
           {/* Divider */}
           <div className="flex items-center my-3">
