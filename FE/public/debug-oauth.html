@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google OAuth Debug - NEW GIS</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <h1>Google Identity Services Debug Tool</h1>
+    
+    <div id="debug-info"></div>
+    
+    <button id="test-google" onclick="testGoogle()">1. Test Google Services</button><br><br>
+    <button id="init-auth" onclick="initAuth()">2. Initialize Identity Services</button><br><br>
+    <button id="test-login" onclick="testLogin()">3. Test Login (Popup)</button><br><br>
+    <button id="test-prompt" onclick="testPrompt()">4. Test One Tap Prompt</button><br><br>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9;">
+        <h3>Debug Results:</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const CLIENT_ID = params.get('client_id') || localStorage.getItem('REACT_APP_GOOGLE_CLIENT_ID') || '';
+        let tokenClient = null;
+        let isInitialized = false;
+        
+        function log(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            console.log(message);
+        }
+        
+        function showInfo() {
+            const info = document.getElementById('debug-info');
+            info.innerHTML = `
+                <p><strong>Current URL:</strong> ${window.location.href}</p>
+                <p><strong>Origin:</strong> ${window.location.origin}</p>
+                <p><strong>Client ID:</strong> ${CLIENT_ID || 'Not set'}</p>
+                <p><strong>Using:</strong> Google Identity Services (NEW)</p>
+            `;
+            if (!CLIENT_ID) {
+              log('⚠️ No client_id provided. Append ?client_id=YOUR_CLIENT_ID to the URL or set localStorage key REACT_APP_GOOGLE_CLIENT_ID');
+            }
+        }
+        
+        function testGoogle() {
+            log('=== Testing Google Identity Services ===');
+            
+            if (typeof google === 'undefined') {
+                log('❌ ERROR: google is not defined. Google Identity Services not loaded.');
+                return false;
+            }
+            
+            log('✅ SUCCESS: google is available');
+            
+            if (!google.accounts) {
+                log('❌ ERROR: google.accounts not available');
+                return false;
+            }
+            
+            log('✅ SUCCESS: google.accounts is available');
+            log(`google.accounts: ${typeof google.accounts}`);
+            
+            if (google.accounts.id) {
+                log('✅ SUCCESS: google.accounts.id available');
+            }
+            
+            if (google.accounts.oauth2) {
+                log('✅ SUCCESS: google.accounts.oauth2 available');
+            }
+            
+            return true;
+        }
+        
+        function initAuth() {
+            log('=== Initializing Google Identity Services ===');
+            
+            if (!testGoogle()) return;
+            if (!CLIENT_ID) { log('❌ ERROR: Client ID is not set'); return; }
+            
+            try {
+                // Initialize for ID token (One Tap)
+                google.accounts.id.initialize({
+                    client_id: CLIENT_ID,
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: false,
+                });
+                
+                log('✅ Google Identity Services initialized for ID tokens');
+                
+                // Initialize OAuth2 token client for access tokens
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: 'openid email profile',
+                    callback: handleTokenResponse,
+                });
+                
+                log('✅ OAuth2 token client initialized');
+                isInitialized = true;
+                
+            } catch (error) {
+                log(`❌ Initialization failed: ${JSON.stringify(error)}`);
+            }
+        }
+        
+        function handleCredentialResponse(response) {
+            log('=== Credential Response Received ===');
+            log(`Credential: ${response.credential.substring(0, 50)}...`);
+            
+            try {
+                // Decode JWT token
+                const decodedToken = JSON.parse(atob(response.credential.split('.')[1]));
+                log(`✅ Token decoded successfully`);
+                log(`User: ${decodedToken.name}`);
+                log(`Email: ${decodedToken.email}`);
+                log(`Picture: ${decodedToken.picture}`);
+                log(`Sub: ${decodedToken.sub}`);
+                
+            } catch (error) {
+                log(`❌ Failed to decode token: ${error.message}`);
+            }
+        }
+        
+        function handleTokenResponse(response) {
+            log('=== Token Response Received ===');
+            log(`Access Token: ${response.access_token.substring(0, 20)}...`);
+            
+            // Get user info using access token
+            fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${response.access_token}`)
+                .then(res => res.json())
+                .then(userInfo => {
+                    log(`✅ User info retrieved`);
+                    log(`User: ${userInfo.name}`);
+                    log(`Email: ${userInfo.email}`);
+                    log(`Picture: ${userInfo.picture}`);
+                    log(`ID: ${userInfo.id}`);
+                })
+                .catch(error => {
+                    log(`❌ Failed to get user info: ${error.message}`);
+                });
+        }
+        
+        function testLogin() {
+            log('=== Testing OAuth2 Popup Login ===');
+            
+            if (!isInitialized) {
+                log('❌ ERROR: Not initialized. Run step 2 first.');
+                return;
+            }
+            
+            if (!tokenClient) {
+                log('❌ ERROR: Token client not available');
+                return;
+            }
+            
+            log('🔄 Starting OAuth2 popup...');
+            
+            try {
+                tokenClient.requestAccessToken();
+            } catch (error) {
+                log(`❌ Popup failed: ${JSON.stringify(error)}`);
+            }
+        }
+        
+        function testPrompt() {
+            log('=== Testing One Tap Prompt ===');
+            
+            if (!isInitialized) {
+                log('❌ ERROR: Not initialized. Run step 2 first.');
+                return;
+            }
+            
+            log('🔄 Starting One Tap prompt...');
+            
+            google.accounts.id.prompt((notification) => {
+                log(`Prompt notification: ${notification.getMomentType()}`);
+                
+                if (notification.isNotDisplayed()) {
+                    log('⚠️ One Tap not displayed (might be suppressed)');
+                    log('Possible reasons:');
+                    log('- User dismissed it recently');
+                    log('- Domain not in authorized list');
+                    log('- Browser settings blocking');
+                } else if (notification.isSkippedMoment()) {
+                    log('⚠️ User skipped One Tap');
+                } else if (notification.isDismissedMoment()) {
+                    log('⚠️ User dismissed One Tap');
+                } else {
+                    log('✅ One Tap displayed successfully');
+                }
+            });
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            showInfo();
+            log('🚀 NEW Google Identity Services debug tool loaded');
+            log('📝 Follow steps: 1 → 2 → 3 or 4');
+            log('📖 Step 3: Popup method (more reliable)');
+            log('📖 Step 4: One Tap method (can be suppressed)');
+        };
+    </script>
+</body>
+</html> 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { User, Flame, Play, BookOpen, Pin, Clock, ChevronRight, ChevronDown } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = ({ onNavigate }) => {
+  const { user } = useAuth();
   const [expandedSkills, setExpandedSkills] = useState(null);
   const [expandedReading, setExpandedReading] = useState(null);
   const [expandedChapterSets, setExpandedChapterSets] = useState({});
@@ -971,6 +973,9 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
     }));
   };
 
+  const displayName = user?.name || 'Fellycia Alvira';
+  const avatarUrl = (typeof user?.picture === 'string' && /^https?:\/\//.test(user.picture)) ? user.picture : null;
+  
   return (
     <div className="min-h-screen bg-white relative">
       {/* Beautiful ZenQuest Header */}
@@ -1003,14 +1008,18 @@ Python's ecosystem makes it an ideal choice for machine learning projects from p
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                    <User className="w-6 h-6 text-gray-500" />
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.src = '/images/zenquest 2.png'; }} />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-500" />
+                    )}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-500 text-sm">Hello!</p>
+                        {/* Header greeting with PRO badge */}
                         <div className="flex items-center space-x-3">
-                          <h2 className="text-xl font-bold text-gray-900">Fellycia Alvira</h2>
+                          <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
                           <span className="bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
                             PRO
                           </span>
