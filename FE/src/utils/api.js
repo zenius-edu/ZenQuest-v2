@@ -1,9 +1,53 @@
 // Backend API Configuration
 import { safeError, safeAsyncCall } from './errorHandler';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+// Prefer env var; fallback ke localhost. 
+// Catatan: untuk Vite: import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL =
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_URL) ||
+  (typeof import !== 'undefined' && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
+  'http://localhost:8000/api/v1';
 
-// Helper function for better error handling
+// Helper: parse JSON aman (handle empty body)
+const parseJsonSafe = async (res) => {
+  try { return await res.json(); } catch { return null; }
+};
+
+// Helper: fetch dengan timeout + error mapping
+const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 15000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+      signal: controller.signal,
+    });
+
+    const data = await parseJsonSafe(response);
+
+    if (!response.ok) {
+      const message = data?.message || response.statusText || 'Unknown error';
+      // Lempar error yang informatif, tapi aman
+      throw new Error(`${context} failed: ${response.status} - ${message}`);
+    }
+    return data;
+  } catch (err) {
+    // AbortError → timeout
+    if (err?.name === 'AbortError') {
+      throw handleApiError(new Error(`${context} timed out after ${timeoutMs}ms`), context);
+    }
+    throw handleApiError(err, context);
+  } finally {
+    clearTimeout(id);
+  }
+};
+
+// Helper error -> pakai safeError
 const handleApiError = (error, context) => {
   const safeErr = safeError(error, context);
   return new Error(safeErr.message);
@@ -14,11 +58,12 @@ export const api = {
   // Google Login endpoint
   googleLogin: async (accessToken, userInfo) => {
     return safeAsyncCall(async () => {
-      const response = await fetch(`${API_BASE_URL}/login/google`, {
+      if (process?.env?.NODE_ENV !== 'production') {
+        try { console.log('[API] POST', `${API_BASE_URL}/login/google`, { email: userInfo?.email }); } catch (_) {}
+      }
+
+      return await doFetch(`${API_BASE_URL}/login/google`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           data: {
             'access-token': accessToken,
@@ -26,14 +71,7 @@ export const api = {
             name: userInfo?.name,
           }
         }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(`Backend error: ${response.status} - ${errorData.message || response.statusText}`);
-      }
-
-      return await response.json();
+      }, 'Google Login API');
     }, null, 'Google Login API').catch(error => {
       throw handleApiError(error, 'Google login API');
     });
@@ -42,69 +80,37 @@ export const api = {
   // Email Login endpoint
   emailLogin: async (email, password) => {
     return safeAsyncCall(async () => {
-      const response = await fetch(`${API_BASE_URL}/login/email`, {
+      return await doFetch(`${API_BASE_URL}/login/email`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(`Login failed: ${response.status} - ${errorData.message || response.statusText}`);
-      }
-
-      return await response.json();
+        body: JSON.stringify({ email, password }),
+      }, 'Email Login API');
     }, null, 'Email Login API').catch(error => {
       throw handleApiError(error, 'Email login API');
     });
   },
 
-  // Future API endpoints can be added here
+  // Get user profile
   getUserProfile: async (userId, accessToken) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user profile: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Get user profile error:', error);
-      throw error;
-    }
+    return safeAsyncCall(async () => {
+      return await doFetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      }, 'Get user profile');
+    }, null, 'Get user profile').catch(error => {
+      throw handleApiError(error, 'Get user profile');
+    });
   },
 
   // Update user data
   updateUser: async (userId, userData, accessToken) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+    return safeAsyncCall(async () => {
+      return await doFetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}` },
         body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update user: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Update user error:', error);
-      throw error;
-    }
+      }, 'Update user');
+    }, null, 'Update user').catch(error => {
+      throw handleApiError(error, 'Update user');
+    });
   }
-}; 
+};
