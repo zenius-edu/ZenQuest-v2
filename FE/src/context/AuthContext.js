@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { setApiAuthToken, setOnUnauthorized } from '../utils/api';
+import { setApiAuthToken, setOnUnauthorized, setApiRefreshToken } from '../utils/api';
 
 // Shape of user profile we care about
 // { id, name, email, picture }
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
         setApiAuthToken(storedToken);
       }
       if (storedRefresh && typeof storedRefresh === 'string') {
-        // kept for reference; api util reads/writes refresh token on login/refresh
+        setApiRefreshToken(storedRefresh);
       }
     } catch (e) {
       console.error('Failed to read auth from storage:', e);
@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('zq_refresh_token');
     } catch {}
     setApiAuthToken(null);
+    setApiRefreshToken(null);
   };
 
   const value = useMemo(() => ({ user, token, setUser, setToken, clearUser }), [user, token]);
