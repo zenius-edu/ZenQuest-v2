@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { User, LogOut, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api, setApiAuthToken } from '../utils/api';
 
 const ProfilePage = ({ onNavigate }) => {
-  const { user, clearUser } = useAuth();
+  const { user, token, setUser, clearUser } = useAuth();
+
+  useEffect(() => {
+    // Ensure API module has the latest token
+    setApiAuthToken(token);
+
+    const loadMe = async () => {
+      if (!token) return;
+      try {
+        const me = await api.getCurrentUser();
+        if (me && (me.email || me.name)) {
+          setUser({
+            ...user,
+            ...me,
+            id: me.id || me["_id"] || user?.id,
+          });
+        }
+      } catch (err) {
+        // If unauthorized, keep the current user; optionally could force logout
+        // console.error('Failed to fetch /login/me', err);
+      }
+    };
+    loadMe();
+    // We want to re-fetch if token changes
+  }, [token]);
 
   const userData = {
     name: user?.name || 'Fellycia Alvira',

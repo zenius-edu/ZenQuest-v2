@@ -1,11 +1,11 @@
 import React from 'react';
 import { Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { api } from '../utils/api';
+import { api, setApiAuthToken } from '../utils/api';
 import { useSafeState } from '../utils/safeHooks';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = ({ onNavigate }) => {
-  const { setUser } = useAuth();
+  const { setUser, setToken } = useAuth();
   const [showPassword, setShowPassword] = useSafeState(false);
   const [email, setEmail] = useSafeState('');
   const [password, setPassword] = useSafeState('');
@@ -31,6 +31,14 @@ const LoginPage = ({ onNavigate }) => {
       try {
         const backendData = await api.googleLogin(token, userInfo);
         console.log('Backend login response:', backendData);
+        // Expecting shape { token, user-data }
+        if (backendData && backendData.token) {
+          setToken(backendData.token);
+          setApiAuthToken(backendData.token);
+          if (backendData['user-data']) {
+            setUser(backendData['user-data']);
+          }
+        }
       } catch (backendError) {
         console.error('Backend login error:', backendError);
       }

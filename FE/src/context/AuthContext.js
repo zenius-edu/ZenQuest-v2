@@ -1,29 +1,38 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { setApiAuthToken } from '../utils/api';
 
 // Shape of user profile we care about
 // { id, name, email, picture }
 
 const AuthContext = createContext({
   user: null,
+  token: null,
   setUser: () => {},
+  setToken: () => {},
   clearUser: () => {},
 });
 
 export const AuthProvider = ({ children }) => {
   const [user, setUserState] = useState(null);
+  const [token, setTokenState] = useState(null);
 
   // Hydrate from localStorage on first load
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('zq_user');
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      const storedUser = localStorage.getItem('zq_user');
+      const storedToken = localStorage.getItem('zq_token');
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
         if (parsed && parsed.email) {
           setUserState(parsed);
         }
       }
+      if (storedToken && typeof storedToken === 'string') {
+        setTokenState(storedToken);
+        setApiAuthToken(storedToken);
+      }
     } catch (e) {
-      console.error('Failed to read user from storage:', e);
+      console.error('Failed to read auth from storage:', e);
     }
   }, []);
 
@@ -40,15 +49,39 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Persist token and propagate to API module
+  useEffect(() => {
+    try {
+      if (token) {
+        localStorage.setItem('zq_token', token);
+      } else {
+        localStorage.removeItem('zq_token');
+      }
+    } catch (e) {
+      console.error('Failed to write token to storage:', e);
+    }
+    setApiAuthToken(token);
+  }, [token]);
+
   const setUser = (nextUser) => {
     setUserState(nextUser);
   };
 
-  const clearUser = () => {
-    setUserState(null);
+  const setToken = (nextToken) => {
+    setTokenState(nextToken || null);
   };
 
-  const value = useMemo(() => ({ user, setUser, clearUser }), [user]);
+  const clearUser = () => {
+    setUserState(null);
+    setTokenState(null);
+    try {
+      localStorage.removeItem('zq_user');
+      localStorage.removeItem('zq_token');
+    } catch {}
+    setApiAuthToken(null);
+  };
+
+  const value = useMemo(() => ({ user, token, setUser, setToken, clearUser }), [user, token]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
