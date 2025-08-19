@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Dashboard from './component/Dashboard';
 import LearningJourney from './component/LearningJourney';
 import CourseResult from './component/CourseResult';
@@ -9,38 +9,63 @@ import RankingPage from './component/RankingPage';
 import ProfilePage from './component/ProfilePage';
 import LoginPage from './component/LoginPage';
 import BottomNavbar from './component/BottomNavbar';
+import { useAuth } from './context/AuthContext';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const { token } = useAuth();
+  const [currentPage, setCurrentPage] = useState('login');
+  const [navTick, setNavTick] = useState(0);
+
+  // React to auth token changes
+  useEffect(() => {
+    if (!token) {
+      setCurrentPage('login');
+    } else if (token && currentPage === 'login') {
+      setCurrentPage('dashboard');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // Listen for forced logout navigation
+  useEffect(() => {
+    const handler = () => setCurrentPage('login');
+    window.addEventListener('zq:navigate-login', handler);
+    return () => window.removeEventListener('zq:navigate-login', handler);
+  }, []);
+
+  const navigate = (page) => {
+    setCurrentPage(page);
+    setNavTick((t) => t + 1);
+  };
 
   const renderPage = () => {
     switch(currentPage) {
       case 'learning-journey':
-        return <LearningJourney onNavigate={setCurrentPage} />;
+        return <LearningJourney onNavigate={navigate} />;
       case 'course-result':
-        return <CourseResult onNavigate={setCurrentPage} />;
+        return <CourseResult onNavigate={navigate} />;
       case 'quiz':
-        return <QuizPage onNavigate={setCurrentPage} />;
+        return <QuizPage onNavigate={navigate} />;
       case 'reading-material':
-        return <ReadingMaterial onNavigate={setCurrentPage} selectedPlan={window.zenverseSelectedPlan} />;
+        return <ReadingMaterial onNavigate={navigate} selectedPlan={window.zenverseSelectedPlan} />;
       case 'reading-page':
-        return <ReadingPage onNavigate={setCurrentPage} selectedPlan={window.zenverseSelectedPlan} selectedChapter={window.zenverseSelectedChapter} />;
+        return <ReadingPage onNavigate={navigate} selectedPlan={window.zenverseSelectedPlan} selectedChapter={window.zenverseSelectedChapter} />;
       case 'ranking':
-        return <RankingPage onNavigate={setCurrentPage} />;
+        return <RankingPage onNavigate={navigate} />;
       case 'profile':
-        return <ProfilePage onNavigate={setCurrentPage} />;
+        return <ProfilePage onNavigate={navigate} refreshKey={navTick} />;
       case 'login':
-        return <LoginPage onNavigate={setCurrentPage} />;
+        return <LoginPage onNavigate={navigate} />;
       case 'dashboard':
       default:
-        return <Dashboard onNavigate={setCurrentPage} />;
+        return <Dashboard onNavigate={navigate} />;
     }
   };
 
   return (
     <div className="App">
       {renderPage()}
-      {currentPage !== 'login' && <BottomNavbar currentPage={currentPage} onNavigate={setCurrentPage} />}
+      {currentPage !== 'login' && <BottomNavbar currentPage={currentPage} onNavigate={navigate} />}
     </div>
   );
 }

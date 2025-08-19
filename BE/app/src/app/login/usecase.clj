@@ -72,22 +72,41 @@
                                             {:$set {:universal-learning-id user-id-str}})
                                  (assoc user :universal-learning-id user-id-str)))]
             {:new-user? false
-             :token (u/create-token (assoc updated-user :exp (u/epoch-time (* 60 60 24 30))))
+             :token (u/create-access-token-for-user updated-user)
+             :refresh-token (u/create-refresh-token-for-user updated-user)
              :user-data updated-user})
           (let [new-user-data {:email email
-                               :name (or (:name google-validation) "New ZenQuest User")}
+                               :name (or (:name google-validation) "New ZenQuest User")
+                               :picture (:picture google-validation)}
                 new-user (register-user db new-user-data)]
             {:new-user? true
-             :token (u/create-token (assoc new-user :exp (u/epoch-time (* 60 60 24 30))))
+             :token (u/create-access-token-for-user new-user)
+             :refresh-token (u/create-refresh-token-for-user new-user)
              :user-data new-user}))))))
 
 (defn get-current-user
   [db request]
   (let [user-id (get-in request [:user :universal-learning-id])]
     (u/info "getting user from db with id: " user-id)
-    (->> (mc/find-one-as-map (:db-zenquest db) "users" {:universal-learning-id user-id})
-        (u/let-pres))))
+    (mc/find-one-as-map (:db-zenquest db) "users" {:universal-learning-id user-id})))
+
+(defn refresh-access-token
+  "Validate refresh token and issue a new access token if valid and user still exists."
+  [db refresh-token]
+  (try
+    (let [claims (u/verify-token refresh-token)]
+      (if (and claims (= (:token-type claims) :refresh))
+        (let [user-id (:universal-learning-id claims)
+              user (mc/find-one-as-map (:db-zenquest db) "users" {:universal-learning-id user-id})]
+          (if user
+            {:token (u/create-access-token-for-user user)}
+            {:error :invalid-user}))
+        {:error :invalid-token}))
+    (catch Exception e
+      (u/error e "Failed to refresh access token")
+      {:error :exception})))
 
 
 (comment
-  (register-user (-> @dev/dev-system :dbase) {:name "Bagas Prima" :email "bagas.prima@zenius.com" :role "admin", :approved true}))
+  (register-user (-> @dev/dev-system :dbase) {:name "Bagas Prima" :email "bagas.prima@zenius.com" :role "admin", :approved true})
+)

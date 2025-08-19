@@ -7,29 +7,77 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:800
 // Determine environment via CRA
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
+// Module-level bearer token used for all requests
+let authToken = null;
+let refreshToken = null;
+let onUnauthorized = null;
+export const setApiAuthToken = (token) => {
+  authToken = token || null;
+};
+export const setApiRefreshToken = (token) => {
+  refreshToken = token || null;
+};
+export const setOnUnauthorized = (fn) => {
+  onUnauthorized = typeof fn === 'function' ? fn : null;
+};
+
 // Helper: parse JSON aman (handle empty body)
 const parseJsonSafe = async (res) => {
   try { return await res.json(); } catch { return null; }
 };
 
+// Attempt to refresh token if we have refreshToken
+const tryRefreshToken = async () => {
+  if (!refreshToken) return false;
+  const res = await fetch(`${API_BASE_URL}/login/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 'refresh-token': refreshToken }),
+  });
+  const data = await parseJsonSafe(res);
+  if (res.ok && data?.token) {
+    authToken = data.token;
+    try { localStorage.setItem('zq_token', data.token); } catch {}
+    return true;
+  }
+  return false;
+};
+
 // Helper: fetch dengan timeout + error mapping
-const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 15000) => {
+const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 15000, hasRetried = false) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  // Attach Authorization header if token exists and header not already set
+  const mergedHeaders = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+  if (authToken && !mergedHeaders.Authorization) {
+    mergedHeaders.Authorization = `Bearer ${authToken}`;
+  }
 
   try {
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-      },
+      headers: mergedHeaders,
       signal: controller.signal,
     });
 
     const data = await parseJsonSafe(response);
 
     if (!response.ok) {
+      // Handle 401 by trying refresh once
+      if (response.status === 401 && !hasRetried) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          return await doFetch(url, options, context, timeoutMs, true);
+        }
+        // refresh failed → notify unauthorized
+        if (onUnauthorized) {
+          try { onUnauthorized(); } catch {}
+        }
+      }
       const message = data?.message || response.statusText || 'Unknown error';
       throw new Error(`${context} failed: ${response.status} - ${message}`);
     }
@@ -70,6 +118,15 @@ export const api = {
     });
   },
 
+  // Get current user (me)
+  getCurrentUser: async () => {
+    return safeAsyncCall(async () => {
+      return await doFetch(`${API_BASE_URL}/login/me`, { method: 'GET' }, 'Get current user');
+    }, null, 'Get current user').catch(error => {
+      throw handleApiError(error, 'Get current user');
+    });
+  },
+
   // Email Login endpoint
   emailLogin: async (email, password) => {
     return safeAsyncCall(async () => {
@@ -82,24 +139,20 @@ export const api = {
     });
   },
 
-  // Get user profile
-  getUserProfile: async (userId, accessToken) => {
+  // Get user profile by id
+  getUserProfile: async (userId) => {
     return safeAsyncCall(async () => {
-      return await doFetch(`${API_BASE_URL}/users/${userId}`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-      }, 'Get user profile');
+      return await doFetch(`${API_BASE_URL}/users/${userId}`, { method: 'GET' }, 'Get user profile');
     }, null, 'Get user profile').catch(error => {
       throw handleApiError(error, 'Get user profile');
     });
   },
 
   // Update user data
-  updateUser: async (userId, userData, accessToken) => {
+  updateUser: async (userId, userData) => {
     return safeAsyncCall(async () => {
       return await doFetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${accessToken}` },
         body: JSON.stringify(userData),
       }, 'Update user');
     }, null, 'Update user').catch(error => {

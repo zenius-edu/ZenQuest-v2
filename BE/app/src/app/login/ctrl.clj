@@ -16,6 +16,7 @@
           {:status 401 :body result}
           (let [user-data (:user-data result)
                 response-body {:token (:token result)
+                               :refresh-token (:refresh-token result)
                                :user-data user-data
                                :message (if new-user?
                                           "User registered and logged in successfully"
@@ -32,8 +33,23 @@
   (try
     (if-let [result (usecase/get-current-user db request)]
       {:status 200 :body result}
-      {:status 404 :body {:message "User not found"}})
+      {:status 401 :body {:message "Invalid or expired token"}})
     (catch Exception e
       (u/error e "Error fetching current user")
+      {:status 500 :body {:message "Internal server error"}})))
+
+(defn refresh-token
+  [db request]
+  (try
+    (let [body (:body request)
+          refresh (:refresh-token body)]
+      (if (not refresh)
+        {:status 400 :body {:message "Missing refresh-token in request"}}
+        (let [result (usecase/refresh-access-token db refresh)]
+          (if (:token result)
+            {:status 200 :body result}
+            {:status 401 :body {:message "Invalid or expired token"}}))))
+    (catch Exception e
+      (u/error e "Error refreshing token")
       {:status 500 :body {:message "Internal server error"}})))
     

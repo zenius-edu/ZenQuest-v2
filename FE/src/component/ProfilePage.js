@@ -1,9 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { User, LogOut, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api, setApiAuthToken } from '../utils/api';
 
-const ProfilePage = ({ onNavigate }) => {
-  const { user, clearUser } = useAuth();
+const ProfilePage = ({ onNavigate, refreshKey }) => {
+  const { user, token, setUser, clearUser } = useAuth();
+
+  useEffect(() => {
+    // Ensure API module has the latest token
+    setApiAuthToken(token);
+
+    const loadMe = async () => {
+      if (!token) return;
+      try {
+        const me = await api.getCurrentUser();
+        if (me && (me.email || me.name)) {
+          setUser({
+            ...user,
+            ...me,
+            id: me.id || me["_id"] || user?.id,
+          });
+        }
+      } catch (err) {
+        // Optionally handle 401 by redirecting
+        // if (err?.message?.includes('401')) onNavigate && onNavigate('login');
+      }
+    };
+    loadMe();
+  }, [token, refreshKey]);
 
   const userData = {
     name: user?.name || 'Fellycia Alvira',
