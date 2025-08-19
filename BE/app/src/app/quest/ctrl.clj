@@ -7,6 +7,15 @@
   (:import (java.io File)))
 
 
+(defn list-quests
+  "Return a list of available quests (hardcoded)."
+  [db openai request]
+  (u/info "== list-quests ==")
+  (let [resp (usecase/list-quests db openai nil)]
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body resp}))
+
 (defn generate-quest
   "Generate quest"
   [db openai request]
@@ -15,8 +24,8 @@
         resp (usecase/generate-quest db openai req)]
     (case (:status resp)
       "ok" {:status  200
-            :headers {"Content-Type" "application/json"}
-            :body    resp} 
+             :headers {"Content-Type" "application/json"}
+             :body    resp} 
       {:status  500
        :headers {"Content-Type" "application/json"}
        :body    resp})))
@@ -40,8 +49,8 @@
                                               :payload req})]
     (case (:status resp)
       "ok" {:status  200
-            :headers {"Content-Type" "application/json"}
-            :body    resp}
+             :headers {"Content-Type" "application/json"}
+             :body    resp}
       {:status  500
        :headers {"Content-Type" "application/json"}
        :body    resp})))
@@ -88,4 +97,19 @@
       {:status 500
        :body   {:status  "error"
                 :message "Internal server error"}})))
+
+(defn submit-answers
+  "Submit answers and return explanation (hardcoded)."
+  [db openai request]
+  (u/info "== submit-answers ==")
+  (let [req (get-in request [:body])
+        claims (:user request)
+        learner-id (or (:universal-learning-id claims)
+                        (:_id claims)
+                        (:learner-id req))
+        _ (u/info "learner-id:" learner-id)
+        resp (usecase/submit-answers db openai req)]
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body resp}))
 

@@ -42,7 +42,13 @@
   [db request]
   (try
     (let [body (:body request)
-          refresh (:refresh-token body)]
+          ;; accept keyword and string keys, and also URL params
+          refresh (or (:refresh-token body)
+                      (:refreshToken body)
+                      (get body "refresh-token")
+                      (get body "refreshToken")
+                      (get-in request [:params :refresh-token])
+                      (get-in request [:params :refreshToken]))]
       (if (not refresh)
         {:status 400 :body {:message "Missing refresh-token in request"}}
         (let [result (usecase/refresh-access-token db refresh)]
