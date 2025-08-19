@@ -1,12 +1,11 @@
 // Backend API Configuration
 import { safeError, safeAsyncCall } from './errorHandler';
 
-// Prefer env var; fallback ke localhost. 
-// Catatan: untuk Vite: import.meta.env.VITE_API_BASE_URL
-const API_BASE_URL =
-  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_URL) ||
-  (typeof import !== 'undefined' && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
-  'http://localhost:8000/api/v1';
+// Prefer env var; fallback ke localhost. (CRA replaces this at build time)
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+// Determine environment via CRA
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Helper: parse JSON aman (handle empty body)
 const parseJsonSafe = async (res) => {
@@ -32,12 +31,10 @@ const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 1500
 
     if (!response.ok) {
       const message = data?.message || response.statusText || 'Unknown error';
-      // Lempar error yang informatif, tapi aman
       throw new Error(`${context} failed: ${response.status} - ${message}`);
     }
     return data;
   } catch (err) {
-    // AbortError → timeout
     if (err?.name === 'AbortError') {
       throw handleApiError(new Error(`${context} timed out after ${timeoutMs}ms`), context);
     }
@@ -58,18 +55,14 @@ export const api = {
   // Google Login endpoint
   googleLogin: async (accessToken, userInfo) => {
     return safeAsyncCall(async () => {
-      if (process?.env?.NODE_ENV !== 'production') {
+      if (isDevelopment) {
         try { console.log('[API] POST', `${API_BASE_URL}/login/google`, { email: userInfo?.email }); } catch (_) {}
       }
 
       return await doFetch(`${API_BASE_URL}/login/google`, {
         method: 'POST',
         body: JSON.stringify({
-          data: {
-            'access-token': accessToken,
-            email: userInfo?.email,
-            name: userInfo?.name,
-          }
+          token: accessToken
         }),
       }, 'Google Login API');
     }, null, 'Google Login API').catch(error => {
