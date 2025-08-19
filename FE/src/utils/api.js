@@ -67,13 +67,14 @@ const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 1500
     const data = await parseJsonSafe(response);
 
     if (!response.ok) {
-      // Handle 401 by trying refresh once
-      if (response.status === 401 && !hasRetried) {
-        const refreshed = await tryRefreshToken();
-        if (refreshed) {
-          return await doFetch(url, options, context, timeoutMs, true);
+      if (response.status === 401) {
+        if (!hasRetried) {
+          const refreshed = await tryRefreshToken();
+          if (refreshed) {
+            return await doFetch(url, options, context, timeoutMs, true);
+          }
         }
-        // refresh failed → notify unauthorized
+        // refresh failed or already retried → unauthorized
         if (onUnauthorized) {
           try { onUnauthorized(); } catch {}
         }
