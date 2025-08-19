@@ -35,12 +35,15 @@
   "Start practice session"
   [db openai request]
   (try
-    (let [learner-id (:learner-id request)]
+    (let [learner-id (:learner-id request)
+          quest-id (:quest-id request)]
       (u/info "Starting session")
       (u/info "learner-id: " learner-id)
+      (u/info "quest-id: " quest-id)
       {:status "ok"
        :message "Session started"
-       :prompt learner-id})
+       :learner-id learner-id
+       :quest-id quest-id})
 
     (catch Exception e
       (u/error "Error starting quest" e)

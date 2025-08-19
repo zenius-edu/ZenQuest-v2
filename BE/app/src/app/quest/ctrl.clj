@@ -27,7 +27,17 @@
   [db openai request]
   (u/info "== starting session ==")
   (let [req (get-in request [:body])
-        resp (usecase/start-session db openai req)]
+        claims (:user request)
+        learner-id (or (:universal-learning-id claims)
+                        (:_id claims)
+                        (:learner-id req))
+        quest-id (or (:quest-id req)
+                     (get-in request [:params :quest-id]))
+        _ (u/info "learner-id:" learner-id)
+        _ (u/info "quest-id:" quest-id)
+        resp (usecase/start-session db openai {:learner-id learner-id
+                                              :quest-id quest-id
+                                              :payload req})]
     (case (:status resp)
       "ok" {:status  200
             :headers {"Content-Type" "application/json"}

@@ -8,4 +8,5 @@
   [db midware]
   ["/login"
    ["/google" {:post (partial login/login-or-register-google db)}]
-   ["/me" {:get (partial midware login/get-current-user db)}]])
+   ["/me" {:get (partial midware login/get-current-user db)}]
+   ["/refresh" {:post (partial login/refresh-token db)}]])

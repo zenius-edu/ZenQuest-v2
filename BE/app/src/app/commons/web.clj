@@ -1,7 +1,8 @@
 (ns app.commons.web
   (:require
    [app.utils :as u]
-   [java-time :as t]))
+   [java-time :as t]
+   [monger.collection :as mc]))
 
 (defn wrap-jwt-auth [handler]
   (fn [request]
@@ -25,18 +26,26 @@
    (u/info "URI : " (:uri request))
    ((wrap-jwt-auth
      (fn [req]
-       (merge {:status 200
-               :headers {"Content-Type" "application/json"}}
-              (fun db req))))
+       (let [user-id (get-in req [:user :universal-learning-id])
+             user (when user-id (mc/find-one-as-map (:db-zenquest db) "users" {:universal-learning-id user-id}))]
+         (if user
+           (merge {:status 200
+                   :headers {"Content-Type" "application/json"}}
+                  (fun db req))
+           {:status 401 :body {:error "Invalid or expired token"}}))))
     request))
   ([fun db openai request]
    (u/info "=======================================================================")
    (u/info "URI : " (:uri request))
    ((wrap-jwt-auth
      (fn [req]
-       (merge {:status 200
-               :headers {"Content-Type" "application/json"}}
-              (fun db openai req))))
+       (let [user-id (get-in req [:user :universal-learning-id])
+             user (when user-id (mc/find-one-as-map (:db-zenquest db) "users" {:universal-learning-id user-id}))]
+         (if user
+           (merge {:status 200
+                   :headers {"Content-Type" "application/json"}}
+                  (fun db openai req))
+           {:status 401 :body {:error "Invalid or expired token"}}))))
     request)))
 
 (defn backware-pass ;; ini nge bypass, ini ngebuat jadi return nya json doang

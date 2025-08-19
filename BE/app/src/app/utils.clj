@@ -236,6 +236,33 @@
       unsigned
       nil)))
 
+;; ----- Token helpers for access/refresh semantics -----
+(defn build-access-claims
+  "Construct minimal access claims from a user map."
+  [user]
+  (let [user-id (or (:universal-learning-id user)
+                    (:_id user))]
+    {:universal-learning-id (str user-id)
+     :email (:email user)
+     :token-type :access
+     :exp (epoch-time (* 60 15))}))
+
+(defn build-refresh-claims
+  "Construct refresh claims from a user map."
+  [user]
+  (let [user-id (or (:universal-learning-id user)
+                    (:_id user))]
+    {:universal-learning-id (str user-id)
+     :email (:email user)
+     :token-type :refresh
+     :exp (epoch-time (* 60 60 24 30))}))
+
+(defn create-access-token-for-user [user]
+  (create-token (build-access-claims user)))
+
+(defn create-refresh-token-for-user [user]
+  (create-token (build-refresh-claims user)))
+
 (defn squuid
   "generate sequential uuid from:
   https://github.com/clojure-cookbook/clojure-cookbook/blob/50a961ece6db1eedcf04cd5284f76d6167755838/01_primitive-data/1-24_uuids.asciidoc"
