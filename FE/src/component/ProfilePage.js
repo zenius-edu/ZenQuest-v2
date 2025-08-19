@@ -3,7 +3,7 @@ import { User, LogOut, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, setApiAuthToken } from '../utils/api';
 
-const ProfilePage = ({ onNavigate }) => {
+const ProfilePage = ({ onNavigate, refreshKey }) => {
   const { user, token, setUser, clearUser } = useAuth();
 
   useEffect(() => {
@@ -22,13 +22,12 @@ const ProfilePage = ({ onNavigate }) => {
           });
         }
       } catch (err) {
-        // If unauthorized, keep the current user; optionally could force logout
-        // console.error('Failed to fetch /login/me', err);
+        // Optionally handle 401 by redirecting
+        // if (err?.message?.includes('401')) onNavigate && onNavigate('login');
       }
     };
     loadMe();
-    // We want to re-fetch if token changes
-  }, [token]);
+  }, [token, refreshKey]);
 
   const userData = {
     name: user?.name || 'Fellycia Alvira',

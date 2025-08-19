@@ -9,8 +9,16 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Module-level bearer token used for all requests
 let authToken = null;
+let refreshToken = null;
+let onUnauthorized = null;
 export const setApiAuthToken = (token) => {
   authToken = token || null;
+};
+export const setApiRefreshToken = (token) => {
+  refreshToken = token || null;
+};
+export const setOnUnauthorized = (fn) => {
+  onUnauthorized = typeof fn === 'function' ? fn : null;
 };
 
 // Helper: parse JSON aman (handle empty body)
@@ -18,8 +26,25 @@ const parseJsonSafe = async (res) => {
   try { return await res.json(); } catch { return null; }
 };
 
+// Attempt to refresh token if we have refreshToken
+const tryRefreshToken = async () => {
+  if (!refreshToken) return false;
+  const res = await fetch(`${API_BASE_URL}/login/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 'refresh-token': refreshToken }),
+  });
+  const data = await parseJsonSafe(res);
+  if (res.ok && data?.token) {
+    authToken = data.token;
+    try { localStorage.setItem('zq_token', data.token); } catch {}
+    return true;
+  }
+  return false;
+};
+
 // Helper: fetch dengan timeout + error mapping
-const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 15000) => {
+const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 15000, hasRetried = false) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -42,6 +67,17 @@ const doFetch = async (url, options = {}, context = 'API call', timeoutMs = 1500
     const data = await parseJsonSafe(response);
 
     if (!response.ok) {
+      // Handle 401 by trying refresh once
+      if (response.status === 401 && !hasRetried) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          return await doFetch(url, options, context, timeoutMs, true);
+        }
+        // refresh failed → notify unauthorized
+        if (onUnauthorized) {
+          try { onUnauthorized(); } catch {}
+        }
+      }
       const message = data?.message || response.statusText || 'Unknown error';
       throw new Error(`${context} failed: ${response.status} - ${message}`);
     }

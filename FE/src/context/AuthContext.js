@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { setApiAuthToken } from '../utils/api';
+import { setApiAuthToken, setOnUnauthorized } from '../utils/api';
 
 // Shape of user profile we care about
 // { id, name, email, picture }
@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const storedUser = localStorage.getItem('zq_user');
       const storedToken = localStorage.getItem('zq_token');
+      const storedRefresh = localStorage.getItem('zq_refresh_token');
       if (storedUser) {
         const parsed = JSON.parse(storedUser);
         if (parsed && parsed.email) {
@@ -30,6 +31,9 @@ export const AuthProvider = ({ children }) => {
       if (storedToken && typeof storedToken === 'string') {
         setTokenState(storedToken);
         setApiAuthToken(storedToken);
+      }
+      if (storedRefresh && typeof storedRefresh === 'string') {
+        // kept for reference; api util reads/writes refresh token on login/refresh
       }
     } catch (e) {
       console.error('Failed to read auth from storage:', e);
@@ -63,6 +67,21 @@ export const AuthProvider = ({ children }) => {
     setApiAuthToken(token);
   }, [token]);
 
+  // Global unauthorized handler: clear auth and push to login
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      try {
+        localStorage.removeItem('zq_token');
+        localStorage.removeItem('zq_refresh_token');
+        localStorage.removeItem('zq_user');
+      } catch {}
+      setTokenState(null);
+      setUserState(null);
+      // Optionally: trigger a full reload to reset app state
+      try { window.dispatchEvent(new CustomEvent('zq:navigate-login')); } catch {}
+    });
+  }, []);
+
   const setUser = (nextUser) => {
     setUserState(nextUser);
   };
@@ -77,6 +96,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.removeItem('zq_user');
       localStorage.removeItem('zq_token');
+      localStorage.removeItem('zq_refresh_token');
     } catch {}
     setApiAuthToken(null);
   };
